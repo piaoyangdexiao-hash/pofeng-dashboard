@@ -183,6 +183,8 @@ var Q_PF = {
   "date": "2026年5月1日 · 周五",
   "daysLeft": 334,
   "month": "2026年4月",
+  "defaultDayIdx": 13,
+  "defaultMonthIdx": 0,
   "weekLabel": "W18 · 4月27日—5月3日",
   "quote": {
     "text": "破风前行，永不放弃",
@@ -335,11 +337,11 @@ var Q_PF = {
     {
       "n": "杰诚",
       "name": "杰诚",
-      "g": "女",
-      "gender": "女",
-      "target": 4800,
+      "g": "男",
+      "gender": "男",
+      "target": 7000,
       "targetNote": "",
-      "p": 184,
+      "p": 126,
       "s": 0,
       "monthly": 8848,
       "today": 0,
@@ -865,7 +867,7 @@ var Q_PF = {
           "name": "杰诚",
           "today": 959,
           "sport": "步行",
-          "p": 184,
+          "p": 126,
           "idx": 2
         },
         {
@@ -960,7 +962,7 @@ var Q_PF = {
           "name": "杰诚",
           "today": 1072,
           "sport": "篮球",
-          "p": 184,
+          "p": 126,
           "idx": 2
         },
         {
@@ -1103,7 +1105,7 @@ var Q_PF = {
           "name": "杰诚",
           "today": 528,
           "sport": "室内骑行",
-          "p": 184,
+          "p": 126,
           "idx": 2
         },
         {
@@ -1188,7 +1190,7 @@ var Q_PF = {
           "name": "杰诚",
           "today": 543,
           "sport": "室内骑行",
-          "p": 184,
+          "p": 126,
           "idx": 2
         },
         {
@@ -1382,7 +1384,7 @@ var Q_PF = {
           "name": "杰诚",
           "today": 157,
           "sport": "力量训练",
-          "p": 184,
+          "p": 126,
           "idx": 2
         }
       ],
@@ -1559,7 +1561,7 @@ var Q_PF = {
           "name": "杰诚",
           "today": 2328,
           "sport": "篮球",
-          "p": 184,
+          "p": 126,
           "idx": 2
         },
         {
@@ -1717,7 +1719,7 @@ var Q_PF = {
           "name": "杰诚",
           "today": 402,
           "sport": "室内骑行",
-          "p": 184,
+          "p": 126,
           "idx": 2
         },
         {
@@ -2024,7 +2026,7 @@ var Q_PF = {
           "name": "杰诚",
           "wk": 809,
           "wd": 2,
-          "p": 184
+          "p": 126
         },
         {
           "name": "婉思",
@@ -2103,7 +2105,7 @@ var Q_PF = {
           "name": "杰诚",
           "wk": 2050,
           "wd": 2,
-          "p": 184
+          "p": 126
         },
         {
           "name": "福远",
@@ -2230,7 +2232,7 @@ var Q_PF = {
           "name": "杰诚",
           "wk": 2559,
           "wd": 3,
-          "p": 184
+          "p": 126
         },
         {
           "name": "之奥",
@@ -2345,7 +2347,7 @@ var Q_PF = {
           "name": "杰诚",
           "wk": 3430,
           "wd": 4,
-          "p": 184
+          "p": 126
         },
         {
           "name": "Tarry",
@@ -2585,10 +2587,10 @@ var Q_PF = {
         {
           "name": "杰诚",
           "n": "杰诚",
-          "g": "女",
-          "gender": "女",
-          "target": 4800,
-          "p": 184,
+          "g": "男",
+          "gender": "男",
+          "target": 7000,
+          "p": 126,
           "s": 0,
           "monthly": 8848,
           "today": 0,
@@ -3088,11 +3090,36 @@ var Q_PF = {
         }
       ],
       "totalMonthly": 109005,
-      "avgP": 104,
+      "avgP": 100,
       "totalFat": 14.2,
       "达标": 12,
       "未达标": 4,
-      "awards": [],
+      "awards": [
+        {
+          "emoji": "⭐",
+          "title": "破风之星",
+          "name": "加宝",
+          "note": "完成度 170%",
+          "value": "170%",
+          "color": "#30D158"
+        },
+        {
+          "emoji": "🔥",
+          "title": "燃烧之星",
+          "name": "加宝",
+          "note": "消耗 11,916 kcal",
+          "value": "11,916",
+          "color": "#FF9F0A"
+        },
+        {
+          "emoji": "👑",
+          "title": "月度领风者",
+          "name": "加宝",
+          "note": "团队消耗第一",
+          "value": "#1",
+          "color": "#FF2D55"
+        }
+      ],
       "fund": {
         "达标": 12,
         "未达标": 4,
@@ -3133,9 +3160,9 @@ var Q_detailChart=null, Q_detailChart2=null, Q_weekChart=null;
 var Q_fullWeekChart=null, Q_fullWeekChart2=null;
 var Q_fullMonthChart=null, Q_fullMonthChart2=null;
 
-/* V6 新增：当前选中索引 */
-var Q_selectedDayIdx = 0;
-var Q_selectedMonthIdx = 0;
+/* V6 新增：当前选中索引（数据驱动，由 Q_PF 注入后覆盖） */
+var Q_selectedDayIdx = -1;  /* -1 表示未初始化，由 Q_PF 注入后设置 */
+var Q_selectedMonthIdx = -1;
 
 /* ── 工具 ── */
 function Q_gc(p){return p>=100?'#30D158':p>=70?'#FF9F0A':'#FF2D55';}
@@ -3626,14 +3653,16 @@ function Q_renderMonthForDate(idx){
 
   /* 月度荣耀 */
   if(monthData.awards && monthData.awards.length > 0){
+    document.getElementById('month-awards').style.display = 'block';
     document.getElementById('month-awards').innerHTML =
       '<div class="sl">月度荣耀</div>'+monthData.awards.map(Q_awardRow).join('');
   } else {
+    document.getElementById('month-awards').style.display = 'none';
     document.getElementById('month-awards').innerHTML = '';
   }
 
-  /* 全员群像 */
-  var sorted = [].concat(members).sort(function(a,b){return b.p-a.p;});
+  /* 全员群像 - 按月度消耗卡路里降序 */
+  var sorted = [].concat(members).sort(function(a,b){return b.monthly-a.monthly;});
   document.getElementById('month-group').innerHTML = sorted.map(function(m, i){
     var col = Q_gc(m.p);
     var chickens = Math.round(m.monthly/290);
@@ -3971,6 +4000,20 @@ function Q_findMemberIdx(name){
 /* ══════════════════════════════════════
    启动
 ══════════════════════════════════════ */
+/* 从 Q_PF 读取默认选中索引 */
+if(typeof Q_PF !== 'undefined') {
+  if(Q_PF.defaultDayIdx !== undefined && Q_PF.defaultDayIdx >= 0) {
+    Q_selectedDayIdx = Q_PF.defaultDayIdx;
+  } else {
+    Q_selectedDayIdx = 0;
+  }
+  if(Q_PF.defaultMonthIdx !== undefined && Q_PF.defaultMonthIdx >= 0) {
+    Q_selectedMonthIdx = Q_PF.defaultMonthIdx;
+  } else {
+    Q_selectedMonthIdx = 0;
+  }
+}
+
 Q_renderDayTab = Q_renderDayDateSelector; /* 别名，日 tab 入口 */
 Q_renderDayTab();
 Q_renderRulesTargets();
