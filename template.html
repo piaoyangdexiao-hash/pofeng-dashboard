@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#000000">
+<title>破风前行 · 运动战报</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{background:#000;min-height:100%;}
+body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',Helvetica,sans-serif;color:#fff;-webkit-font-smoothing:antialiased;overflow-x:hidden;}
+::-webkit-scrollbar{display:none;}*{scrollbar-width:none;}
+#app{max-width:480px;margin:0 auto;min-height:100vh;padding-bottom:max(24px,env(safe-area-inset-bottom));}
+.sbar{position:sticky;top:0;background:#000;z-index:100;}
+.tbtn{padding:5px 12px;border-radius:8px;border:none;cursor:pointer;font-family:-apple-system,sans-serif;-webkit-tap-highlight-color:transparent;transition:background .15s,color .15s;}
+.mc{cursor:pointer;-webkit-tap-highlight-color:transparent;transition:opacity .12s;}
+.mc:active{opacity:.5;}
+.aw+.aw{border-top:0.5px solid #2C2C2E;}
+.aw{display:flex;align-items:center;gap:10px;padding:10px 0;}
+.sl{font-size:10px;color:#636366;font-weight:700;letter-spacing:1px;margin-bottom:10px;text-transform:uppercase;}
+@media(max-width:360px){.tbtn{padding:5px 9px!important;font-size:12px!important;}}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- 顶部导航 -->
+<div class="sbar" style="display:flex;align-items:center;padding:14px 16px 12px;border-bottom:0.5px solid #1C1C1E;">
+  <span style="font-size:11px;color:#FF2D55;font-weight:700;letter-spacing:1.4px;flex:1;">POFENG · 破风前行</span>
+  <div style="display:flex;background:#1C1C1E;border-radius:10px;padding:3px;gap:2px;" id="tabbar"></div>
+</div>
+
+<!-- 日 VIEW -->
+<div id="v-day" style="padding:16px 16px 24px;">
+  <div id="day-header" style="font-size:12px;color:#636366;margin-bottom:12px;"></div>
+  <div id="day-stats" style="margin-bottom:14px;"></div>
+  <div id="day-hero" style="margin-bottom:11px;"></div>
+  <div id="day-podium" style="margin-bottom:11px;"></div>
+  <div id="day-rank4-label" class="sl" style="display:none;">今日打卡排名 · 第4名起</div>
+  <div id="day-rank4" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:16px;"></div>
+  <div id="day-unchecked-card" style="margin-bottom:16px;"></div>
+  <div id="day-darkhorse" style="margin-bottom:16px;"></div>
+  <div class="sl">本月进度 · 点击查看个人详情</div>
+  <div id="day-monthly-grid" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;"></div>
+</div>
+
+<!-- 周 VIEW -->
+<div id="v-week" style="display:none;padding:16px 16px 24px;">
+  <div id="week-header"></div>
+  <div id="week-hero" style="margin-bottom:11px;"></div>
+  <div id="week-awards" style="background:#1C1C1E;border-radius:13px;padding:14px;margin-bottom:11px;"></div>
+  <div style="background:#1C1C1E;border-radius:13px;padding:14px;margin-bottom:11px;">
+    <div class="sl">本周每日团队消耗</div>
+    <div style="position:relative;height:140px;"><canvas id="wk-chart"></canvas></div>
+  </div>
+  <div style="background:#1C1C1E;border-radius:13px;padding:14px;margin-bottom:11px;">
+    <div class="sl">本周成员明细</div>
+    <div id="week-members"></div>
+  </div>
+  <div style="background:#1C1C1E;border-radius:13px;padding:14px;">
+    <div class="sl">历史各周领风者</div>
+    <div id="week-champs"></div>
+  </div>
+</div>
+
+<!-- 月 VIEW -->
+<div id="v-month" style="display:none;padding:16px 16px 24px;">
+  <div id="month-header"></div>
+  <div id="month-overview" style="margin-bottom:11px;"></div>
+  <div id="month-awards" style="background:#1C1C1E;border-radius:13px;padding:14px;margin-bottom:11px;"></div>
+  <div class="sl">全员月度群像 · 点击查看个人详情</div>
+  <div id="month-group" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:11px;"></div>
+  <div id="month-fund"></div>
+</div>
+
+<!-- 规则 VIEW -->
+<div id="v-rules" style="display:none;padding:16px 16px 24px;">
+  <div style="font-size:20px;font-weight:800;margin-bottom:16px;">项目总规则</div>
+
+  <div style="background:#1C1C1E;border-radius:13px;padding:14px;margin-bottom:10px;">
+    <div style="font-size:10px;color:#FF2D55;font-weight:700;letter-spacing:1px;margin-bottom:10px;text-transform:uppercase;">项目简介</div>
+    <div style="font-size:13px;color:#d4d4d4;line-height:1.75;">破风前行是以2027年3月体测为目标的团队健身计划，通过钉钉表格记录打卡、AI每日自动生成报告。每月达标保本金，未达标500元入池。</div>
+    <div style="display:flex;gap:8px;margin-top:12px;">
+      <div style="background:#2C2C2E;border-radius:9px;padding:9px 12px;flex:1;text-align:center;"><div style="font-size:10px;color:#636366;margin-bottom:3px;">团队人数</div><div style="font-size:15px;font-weight:700;color:#0A84FF;">16人</div></div>
+      <div style="background:#2C2C2E;border-radius:9px;padding:9px 12px;flex:1;text-align:center;"><div style="font-size:10px;color:#636366;margin-bottom:3px;">目标日期</div><div style="font-size:15px;font-weight:700;color:#FF9F0A;">2027.03</div></div>
+      <div id="r-countdown" style="background:#2C2C2E;border-radius:9px;padding:9px 12px;flex:1;text-align:center;"></div>
+    </div>
+  </div>
+
+  <!-- 基础目标 -->
+  <div style="background:#1C1C1E;border-radius:13px;padding:14px;margin-bottom:10px;">
+    <div style="font-size:10px;color:#30D158;font-weight:700;letter-spacing:1px;margin-bottom:12px;text-transform:uppercase;">月度基础目标</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+      <div style="background:#2C2C2E;border-radius:11px;padding:14px;text-align:center;border:0.5px solid #0A84FF25;"><div style="font-size:11px;color:#636366;margin-bottom:5px;">男性基础目标</div><div style="font-size:28px;font-weight:800;color:#0A84FF;">7,000</div><div style="font-size:11px;color:#48484A;margin-top:3px;">kcal / 月</div></div>
+      <div style="background:#2C2C2E;border-radius:11px;padding:14px;text-align:center;border:0.5px solid #FF2D5525;"><div style="font-size:11px;color:#636366;margin-bottom:5px;">女性基础目标</div><div style="font-size:28px;font-weight:800;color:#FF2D55;">4,800</div><div style="font-size:11px;color:#48484A;margin-top:3px;">kcal / 月</div></div>
+    </div>
+    <div style="font-size:12px;color:#636366;line-height:1.65;">病假豁免公式：基础目标 × (自然周数 − 病假周数) ÷ 自然周数</div>
+  </div>
+
+  <!-- 本月各人实际目标（JS 动态渲染） -->
+  <div style="background:#1C1C1E;border-radius:13px;padding:14px;margin-bottom:10px;">
+    <div id="r-targets-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <div style="font-size:10px;color:#FF9F0A;font-weight:700;letter-spacing:1px;text-transform:uppercase;">本月各人实际目标</div>
+      <div id="r-targets-month" style="font-size:10px;color:#636366;"></div>
+    </div>
+    <div id="r-targets" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;"></div>
+    <div id="r-targets-note" style="margin-top:10px;font-size:11px;color:#636366;"></div>
+  </div>
+
+  <!-- 奖项规则 -->
+  <div style="background:#1C1C1E;border-radius:13px;padding:14px;margin-bottom:10px;">
+    <div style="font-size:10px;color:#FF9F0A;font-weight:700;letter-spacing:1px;margin-bottom:12px;text-transform:uppercase;">奖项规则速查</div>
+    <div style="display:flex;flex-direction:column;gap:9px;font-size:13px;">
+      <div style="display:flex;gap:10px;align-items:flex-start;"><span style="flex-shrink:0;width:20px;">🏆</span><div><span style="font-weight:600;color:#FF9F0A;">月度MVP</span><span style="color:#636366;font-size:12px;margin-left:6px;">月度消耗最高，必有一人</span></div></div>
+      <div style="display:flex;gap:10px;align-items:flex-start;"><span style="flex-shrink:0;width:20px;">🚀</span><div><span style="font-weight:600;color:#0A84FF;">月度进步奖</span><span style="color:#636366;font-size:12px;margin-left:6px;">环比增幅≥30%，上月有记录</span></div></div>
+      <div style="display:flex;gap:10px;align-items:flex-start;"><span style="flex-shrink:0;width:20px;">🚩</span><div><span style="font-weight:600;color:#30D158;">月度全勤奖</span><span style="color:#636366;font-size:12px;margin-left:6px;">每自然周有打卡 + 总次数≥12</span></div></div>
+      <div style="display:flex;gap:10px;align-items:flex-start;"><span style="flex-shrink:0;width:20px;">🛡️</span><div><span style="font-weight:600;color:#8E8E93;">钢铁意志</span><span style="color:#636366;font-size:12px;margin-left:6px;">差旅日期内仍有打卡记录</span></div></div>
+      <div style="display:flex;gap:10px;align-items:flex-start;"><span style="flex-shrink:0;width:20px;">⚡</span><div><span style="font-weight:600;color:#0A84FF;">今日黑马</span><span style="color:#636366;font-size:12px;margin-left:6px;">比自己7日均值增幅最高</span></div></div>
+      <div style="display:flex;gap:10px;align-items:flex-start;"><span style="flex-shrink:0;width:20px;">🚀</span><div><span style="font-weight:600;color:#0A84FF;">破风新星（周）</span><span style="color:#636366;font-size:12px;margin-left:6px;">周环比增幅≥20%</span></div></div>
+      <div style="display:flex;gap:10px;align-items:flex-start;"><span style="flex-shrink:0;width:20px;">⚡</span><div><span style="font-weight:600;color:#FF9F0A;">逆风翻盘（周）</span><span style="color:#636366;font-size:12px;margin-left:6px;">本周打卡次数净提升最多</span></div></div>
+      <div style="display:flex;gap:10px;align-items:flex-start;"><span style="flex-shrink:0;width:20px;">🚩</span><div><span style="font-weight:600;color:#FF2D55;">言出必行（周）</span><span style="color:#636366;font-size:12px;margin-left:6px;">连续≥3周每周≥5次打卡</span></div></div>
+    </div>
+  </div>
+
+  <!-- 基金规则 -->
+  <div style="background:#1C1C1E;border-radius:13px;padding:14px;border:0.5px solid #FF9F0A30;">
+    <div style="font-size:10px;color:#FF9F0A;font-weight:700;letter-spacing:1px;margin-bottom:10px;text-transform:uppercase;">破风基金规则</div>
+    <div style="font-size:13px;color:#d4d4d4;line-height:1.75;">每人每月缴纳 <span style="color:#FF9F0A;font-weight:700;">¥500</span>。月底达成目标 → 保留500元；未达标 → 500元进入破风基金池。病假成员经雷加确认后豁免当月考核。基金池在项目结束时统一分配。</div>
+  </div>
+</div>
+
+<!-- 个人详情 VIEW（Layer 2） -->
+<div id="v-detail" style="display:none;padding:16px 16px 24px;">
+  <button onclick="backFromDetail()" style="background:none;border:none;color:#0A84FF;font-size:15px;cursor:pointer;padding:0 0 16px;display:flex;align-items:center;gap:4px;font-family:-apple-system,sans-serif;-webkit-tap-highlight-color:transparent;">‹ 返回团队</button>
+  <div id="detail-content"></div>
+</div>
+
+</div><!-- #app -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+
+<!-- ═══════════════════════════════════════════════════════
+     POFENG_DATA_START
+     ↓ Q 每天只替换这一块，HTML/CSS/JS 渲染逻辑不动 ↓
+═══════════════════════════════════════════════════════ -->
+<!-- POFENG_DATA_START -->
+<script>
+var PF = {
+
+  /* ── 页面元信息 ── */
+  date:      "2026年4月30日 · 周四",
+  daysLeft:  336,
+  month:     "2026年4月",
+  weekLabel: "W17 · 4月27日—5月3日",
+
+  /* ── 今日名言 ── */
+  quote: { text:"我要冲破一切阻碍，成为最强的自己", author:"雷加" },
+
+  /* ── 今日黑马（Q 计算：today / 7日均值 增幅最大者） ── */
+  darkHorse: { name:"明月", avg7:280, todayKcal:800, pct:185 },
+
+  /* ── 周度图表数据 ── */
+  weekDays:    ["周一 4/27","周二 4/28","周三 4/29","周四 4/30"],
+  weekData:    [18200, 22400, 15800, 20100],
+  weekAvgLine: 19200,
+
+  /* ── 历史各周冠军 ── */
+  weekChamps: [
+    { w:"W13 · 3/30-4/5",   n:"太宇", k:8400  },
+    { w:"W14 · 4/6-4/12",   n:"晓识", k:7850  },
+    { w:"W15 · 4/13-4/19",  n:"加宝", k:8120  },
+    { w:"W16 · 4/20-4/26",  n:"太宇", k:8530  },
+    { w:"W17 · 4/27-5/3",   n:"太宇", k:5100, cur:true },
+  ],
+
+  /* ── 周度奖项 ── */
+  weekAwards: [
+    { emoji:"🚀", color:"#0A84FF", title:"破风新星", name:"之奥",      note:"周环比 +45%",       value:"+45%"   },
+    { emoji:"⚡", color:"#FF9F0A", title:"逆风翻盘", name:"博文",      note:"本周次数 +4次",     value:"+4次"   },
+    { emoji:"🚩", color:"#FF2D55", title:"言出必行", name:"雷加 · 晓识",note:"连续3周 ≥5次/周",  value:"连续3周" },
+    { emoji:"🛡️",color:"#8E8E93", title:"钢铁意志", name:"雷加",      note:"差旅期间打卡3次",   value:"满分"   },
+  ],
+
+  /* ── 周领风者 ── */
+  weekHero: { name:"太宇", sport:"力量训练", days:4, weekKcal:5100, monthP:118 },
+
+  /* ── 月度奖项 ── */
+  monthAwards: [
+    { emoji:"🏆", color:"#FF9F0A", title:"月度MVP",   name:"太宇",      note:"8,260 kcal · 月度消耗最高",   value:"118%"  },
+    { emoji:"🚀", color:"#0A84FF", title:"月度进步奖", name:"博文",      note:"2,200→4,340 kcal · +97%",    value:"+97%"  },
+    { emoji:"🚩", color:"#30D158", title:"月度全勤奖", name:"雷加 · 晓识",note:"每周有打卡 + 总次数≥12",    value:"全勤"  },
+    { emoji:"🛡️",color:"#8E8E93", title:"钢铁意志",  name:"雷加",      note:"差旅5天全打卡",               value:"满分"  },
+  ],
+
+  /* ── 破风基金 ── */
+  fund: { 达标:7, 未达标:6, 新增:3000, 累计:8500, 豁免:"伊竹" },
+
+  /* ── 成员数据（Q 从钉钉记录 + targets.json 计算后填入） ──
+     字段说明：
+       n         名字
+       g         性别（男/女）
+       target    本月实际目标 kcal（来自 targets.json，已含病假减免）
+       targetNote 目标调整说明，空串 = 无调整
+       p         月度完成率 % = round(monthly / target * 100)
+       s         连续打卡天数
+       monthly   本月累计消耗 kcal
+       today     今日消耗 kcal（未打卡填 0）
+       sport     今日运动类型（未打卡填 ""）
+       wk        本周累计消耗 kcal
+       wd        本周打卡次数
+       h         近7日月度累计快照 [7个值，最新在末尾]
+       lm        上月总消耗 kcal（0 = 首次参与）
+       mwk       本月分周消耗 [W1,W2,W3,W4]
+       sd        运动类型分布 % [跑步,力量训练,瑜伽/拉伸,骑行]，合计100
+  ── */
+  members: [
+    { n:"之奥", g:"女", target:4800, targetNote:"",
+      p:127, s:28, monthly:6096, today:960,  sport:"瑜伽",
+      wk:3430, wd:5, h:[3900,4200,4800,5100,5600,6100,6096],
+      lm:4200, mwk:[1200,1400,1700,1796], sd:[15,5,75,5] },
+
+    { n:"太宇", g:"男", target:7000, targetNote:"",
+      p:118, s:22, monthly:8260, today:1240, sport:"力量训练",
+      wk:5100, wd:4, h:[6200,6800,7100,7400,7700,8000,8260],
+      lm:7800, mwk:[1800,2100,2300,2060], sd:[25,55,5,15] },
+
+    { n:"加宝", g:"男", target:7000, targetNote:"",
+      p:115, s:19, monthly:8050, today:1180, sport:"跑步",
+      wk:4800, wd:4, h:[5800,6300,6900,7200,7500,7800,8050],
+      lm:7200, mwk:[1900,2000,2150,2000], sd:[60,20,10,10] },
+
+    { n:"伊竹", g:"女", target:3038, targetNote:"病假豁免·减2周",
+      p:158, s:5,  monthly:4800, today:760,  sport:"跑步",
+      wk:2900, wd:4, h:[0,0,0,0,4200,4600,4800],
+      lm:0,    mwk:[0,0,1400,3400], sd:[80,10,5,5] },
+
+    { n:"晓识", g:"男", target:7000, targetNote:"",
+      p:109, s:15, monthly:7630, today:850,  sport:"综合训练",
+      wk:4200, wd:5, h:[5400,5900,6400,6800,7100,7300,7630],
+      lm:6800, mwk:[1700,1900,2000,2030], sd:[30,40,15,15] },
+
+    { n:"杰诚", g:"男", target:7000, targetNote:"",
+      p:103, s:12, monthly:7210, today:780,  sport:"骑行",
+      wk:3800, wd:4, h:[5100,5700,6100,6500,6800,7000,7210],
+      lm:6500, mwk:[1600,1800,2000,1810], sd:[15,20,5,60] },
+
+    { n:"雷加", g:"男", target:7000, targetNote:"",
+      p:102, s:30, monthly:7140, today:820,  sport:"跑步",
+      wk:4500, wd:5, h:[6900,7000,7100,7050,7200,7100,7140],
+      lm:7000, mwk:[1700,1800,1800,1840], sd:[50,30,10,10] },
+
+    { n:"明月", g:"女", target:4800, targetNote:"",
+      p:95,  s:8,  monthly:4560, today:800,  sport:"跑步",
+      wk:2200, wd:3, h:[3800,4000,4200,4300,4400,4500,4560],
+      lm:3800, mwk:[800,1100,1400,1260], sd:[70,10,15,5] },
+
+    { n:"晨曦", g:"男", target:7000, targetNote:"",
+      p:92,  s:6,  monthly:6440, today:0,    sport:"",
+      wk:3600, wd:4, h:[4400,4900,5300,5700,6000,6200,6440],
+      lm:5900, mwk:[1400,1600,1800,1640], sd:[40,35,15,10] },
+
+    { n:"志远", g:"男", target:7000, targetNote:"",
+      p:88,  s:4,  monthly:6160, today:0,    sport:"",
+      wk:3200, wd:3, h:[3900,4400,4800,5200,5600,5900,6160],
+      lm:5400, mwk:[1200,1500,1800,1660], sd:[35,30,20,15] },
+
+    { n:"秋水", g:"女", target:4800, targetNote:"",
+      p:82,  s:3,  monthly:3936, today:0,    sport:"",
+      wk:1800, wd:3, h:[3200,3400,3600,3700,3800,3850,3936],
+      lm:3500, mwk:[900,1000,1100,936],  sd:[25,10,55,10] },
+
+    { n:"天明", g:"男", target:7000, targetNote:"",
+      p:75,  s:2,  monthly:5250, today:0,    sport:"",
+      wk:2100, wd:2, h:[3200,3700,4100,4500,4800,5000,5250],
+      lm:4500, mwk:[1000,1300,1500,1450], sd:[20,40,20,20] },
+
+    { n:"芸香", g:"女", target:4800, targetNote:"",
+      p:68,  s:0,  monthly:3264, today:0,    sport:"",
+      wk:1400, wd:2, h:[2900,3100,3200,3100,3200,3200,3264],
+      lm:2800, mwk:[700,800,900,864],    sd:[30,5,55,10] },
+
+    { n:"博文", g:"男", target:7000, targetNote:"",
+      p:62,  s:0,  monthly:4340, today:0,    sport:"",
+      wk:2100, wd:3, h:[2700,3100,3500,3800,4000,4200,4340],
+      lm:2200, mwk:[700,900,1200,1540],  sd:[40,25,15,20] },
+
+    { n:"凌云", g:"女", target:4800, targetNote:"",
+      p:55,  s:0,  monthly:2640, today:0,    sport:"",
+      wk:1200, wd:2, h:[2200,2400,2600,2500,2500,2600,2640],
+      lm:2400, mwk:[500,600,700,840],    sd:[20,10,60,10] },
+
+    { n:"启航", g:"男", target:7000, targetNote:"",
+      p:43,  s:0,  monthly:3010, today:0,    sport:"",
+      wk:1500, wd:2, h:[1800,2100,2500,2700,2800,2900,3010],
+      lm:2600, mwk:[600,700,800,910],    sd:[45,20,20,15] },
+  ],
+};
+</script>
+<!-- POFENG_DATA_END -->
+
+<!-- ═══════════════════════════════════════════════════════
+     渲染逻辑（不需要修改）
+═══════════════════════════════════════════════════════ -->
+<script>
+var SPORT_LABELS = ['跑步','力量训练','瑜伽/拉伸','骑行'];
+var SPORT_COLORS = ['#0A84FF','#FF2D55','#30D158','#FF9F0A'];
+var ENCS = [
+  '「破风路上，不落一人。今天还来得及，动起来 💪」',
+  '「每一滴汗水都是对未来的投资，队友等你！🔥」',
+  '「别让今天的懒惰，成为明天和队友的差距。冲！🚴」',
+  '「凌晨三点的努力你看不到，但今晚的打卡你能做到 ⚡」',
+  '「运动不一定让你赢，但不运动一定会让你输 💪」',
+  '「差旅中的雷加都在打卡，你还在等什么？🏃」',
+  '「今日不动，明日多痛。快去运动吧 🎯」',
+];
+
+var TABS = [
+  {id:'day',   label:'日',   color:'#FF2D55'},
+  {id:'week',  label:'周',   color:'#30D158'},
+  {id:'month', label:'月',   color:'#FF9F0A'},
+  {id:'rules', label:'规则', color:'#0A84FF'},
+];
+var currentTab='day', detailChart=null, detailChart2=null;
+
+/* ── 工具 ── */
+function gc(p){return p>=100?'#30D158':p>=70?'#FF9F0A':'#FF2D55';}
+function fmt(n){return n.toLocaleString();}
+
+function ring(p,sz){
+  var r=sz*.38,c=2*Math.PI*r,col=gc(p),f=Math.min(p/100,1)*c,g=c-f,ov='';
+  if(p>100){
+    var r2=r*.74,c2=2*Math.PI*r2,f2=Math.min((p-100)/100,1)*c2;
+    ov='<circle cx="'+sz/2+'" cy="'+sz/2+'" r="'+r2+'" fill="none" stroke="'+col
+      +'" stroke-opacity=".35" stroke-width="'+(sz*.062)+'" stroke-dasharray="'+f2+' '+c2
+      +'" stroke-linecap="round" transform="rotate(-90 '+sz/2+' '+sz/2+')"/>';
+  }
+  return '<svg width="'+sz+'" height="'+sz+'" viewBox="0 0 '+sz+' '+sz+'">'
+    +'<circle cx="'+sz/2+'" cy="'+sz/2+'" r="'+r+'" fill="none" stroke="#2C2C2E" stroke-width="'+(sz*.082)+'"/>'
+    +'<circle cx="'+sz/2+'" cy="'+sz/2+'" r="'+r+'" fill="none" stroke="'+col+'" stroke-width="'+(sz*.082)
+    +'" stroke-dasharray="'+f+' '+g+'" stroke-linecap="round" transform="rotate(-90 '+sz/2+' '+sz/2+')"/>'
+    +ov
+    +'<text x="'+sz/2+'" y="'+(sz/2+.5)+'" text-anchor="middle" dominant-baseline="middle" fill="'+col
+    +'" font-size="'+(sz*.175)+'px" font-weight="700" font-family="-apple-system,sans-serif">'+p+'%</text>'
+    +'</svg>';
+}
+
+function awardRow(a){
+  return '<div class="aw">'
+    +'<span style="font-size:15px;width:22px;text-align:center;flex-shrink:0;">'+a.emoji+'</span>'
+    +'<div style="flex:1;">'
+      +'<div style="font-size:9px;color:'+a.color+';font-weight:700;">'+a.title+'</div>'
+      +'<div style="font-size:13px;font-weight:600;margin-top:2px;">'+a.name+'</div>'
+      +'<div style="font-size:10px;color:#636366;margin-top:1px;">'+a.note+'</div>'
+    +'</div>'
+    +'<div style="font-size:16px;font-weight:800;color:'+a.color+';flex-shrink:0;">'+a.value+'</div>'
+    +'</div>';
+}
+
+/* ── Tab bar ── */
+document.getElementById('tabbar').innerHTML=TABS.map(function(t){
+  var a=t.id==='day';
+  return '<button class="tbtn" onclick="sw(\''+t.id+'\')" id="t-'+t.id+'"'
+    +' style="font-size:13px;background:'+(a?t.color:'transparent')+';color:'+(a?'#fff':'#636366')+';font-weight:'+(a?700:500)+';">'+t.label+'</button>';
+}).join('');
+
+function sw(id){
+  currentTab=id;
+  document.getElementById('v-detail').style.display='none';
+  TABS.forEach(function(t){
+    document.getElementById('v-'+t.id).style.display=t.id===id?'block':'none';
+    var b=document.getElementById('t-'+t.id);
+    b.style.background=t.id===id?t.color:'transparent';
+    b.style.color=t.id===id?'#fff':'#636366';
+    b.style.fontWeight=t.id===id?700:500;
+  });
+  window.scrollTo(0,0);
+  if(id==='week'&&!window._wkDone)  setTimeout(renderWeekTab, 60);
+  if(id==='month'&&!window._mkDone) renderMonthTab();
+}
+
+/* ══════════════════════════════════════
+   日报渲染
+══════════════════════════════════════ */
+function renderDayTab(){
+  var M=PF.members;
+
+  /* 日期标题 */
+  document.getElementById('day-header').innerHTML=
+    PF.date+' · 距目标 <span style="color:#FF9F0A;font-weight:600;">'+PF.daysLeft+'天</span>';
+
+  /* 今日排名（按 today kcal 降序，仅打卡者） */
+  var ranked=M.filter(function(m){return m.today>0;})
+              .sort(function(a,b){return b.today-a.today;});
+  var unchecked=M.filter(function(m){return m.today===0;});
+
+  /* 今日统计 */
+  var totalToday=ranked.reduce(function(s,m){return s+m.today;},0);
+  var avgToday=ranked.length?Math.round(totalToday/ranked.length):0;
+  document.getElementById('day-stats').innerHTML=
+    '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">'
+    +'<div style="background:#1C1C1E;border-radius:11px;padding:12px 10px;">'
+      +'<div style="font-size:10px;color:#636366;margin-bottom:4px;">今日打卡</div>'
+      +'<div style="font-size:20px;font-weight:700;color:#30D158;">'+ranked.length+' <span style="font-size:11px;color:#48484A;font-weight:400;">/ '+M.length+'</span></div></div>'
+    +'<div style="background:#1C1C1E;border-radius:11px;padding:12px 10px;">'
+      +'<div style="font-size:10px;color:#636366;margin-bottom:4px;">今日消耗</div>'
+      +'<div style="font-size:20px;font-weight:700;color:#FF2D55;">'+fmt(totalToday)+'</div></div>'
+    +'<div style="background:#1C1C1E;border-radius:11px;padding:12px 10px;">'
+      +'<div style="font-size:10px;color:#636366;margin-bottom:4px;">今日人均</div>'
+      +'<div style="font-size:20px;font-weight:700;color:#0A84FF;">'+fmt(avgToday)+'</div></div>'
+    +'</div>';
+
+  /* Hero #1 */
+  if(ranked.length>0){
+    var h=ranked[0], hcol=gc(h.p);
+    document.getElementById('day-hero').innerHTML=
+      '<div style="background:#1C1C1E;border-radius:16px;padding:18px;border:0.5px solid #FF9F0A45;">'
+      +'<div style="font-size:9px;color:#FF9F0A;font-weight:700;letter-spacing:1.2px;margin-bottom:12px;">今日破风榜 · No.1</div>'
+      +'<div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;">'
+        +'<div style="flex-shrink:0;">'+ring(h.p,90)+'</div>'
+        +'<div style="flex:1;min-width:0;">'
+          +'<div style="font-size:26px;font-weight:800;line-height:1;">'+h.n+'</div>'
+          +'<div style="font-size:12px;color:#636366;margin-top:3px;">'+(h.sport||'综合训练')+' · 今日打卡</div>'
+          +'<div style="font-size:20px;font-weight:700;color:#FF9F0A;margin-top:6px;">'+fmt(h.today)+' <span style="font-size:12px;color:#636366;font-weight:400;">kcal 今日</span></div>'
+        +'</div>'
+        +'<div style="text-align:right;flex-shrink:0;">'
+          +'<div style="font-size:10px;color:#636366;">月度完成</div>'
+          +'<div style="font-size:20px;font-weight:800;color:'+hcol+';">'+h.p+'%</div>'
+        +'</div>'
+      +'</div>'
+      +'<div style="background:#2C2C2E;border-radius:9px;padding:10px 12px;">'
+        +'<span style="font-size:12px;color:#48484A;">「</span>'
+        +'<span style="font-size:12px;color:#d4d4d4;font-style:italic;">'+PF.quote.text+'</span>'
+        +'<span style="font-size:12px;color:#48484A;">」— '+PF.quote.author+'</span>'
+      +'</div>'
+      +'</div>';
+  }
+
+  /* Podium #2 #3 */
+  var podiumHtml='<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">';
+  var medals=['🥈 今日第二','🥉 今日第三'];
+  for(var i=1;i<=2;i++){
+    if(ranked[i]){
+      var pm=ranked[i];
+      podiumHtml+='<div style="background:#1C1C1E;border-radius:13px;padding:14px 10px;text-align:center;">'
+        +'<div style="font-size:9px;color:#636366;letter-spacing:0.6px;margin-bottom:8px;">'+medals[i-1]+'</div>'
+        +'<div style="display:flex;justify-content:center;margin-bottom:7px;">'+ring(pm.p,62)+'</div>'
+        +'<div style="font-size:14px;font-weight:700;">'+pm.n+'</div>'
+        +'<div style="font-size:11px;color:#8E8E93;margin-top:3px;">'+fmt(pm.today)+' kcal · '+(pm.sport||'综合训练')+'</div>'
+        +'</div>';
+    }
+  }
+  podiumHtml+='</div>';
+  document.getElementById('day-podium').innerHTML=podiumHtml;
+
+  /* Rank #4+ */
+  var rest=ranked.slice(3);
+  var rl=document.getElementById('day-rank4-label');
+  if(rest.length>0){
+    rl.style.display='block';
+    document.getElementById('day-rank4').innerHTML=rest.map(function(m,i){
+      var col=gc(m.p);
+      return '<div class="mc" onclick="showDayMember('+M.indexOf(m)+')" style="background:#1C1C1E;border-radius:11px;padding:9px 4px 8px;text-align:center;">'
+        +'<div style="font-size:9px;color:#636366;margin-bottom:4px;">#'+(i+4)+'</div>'
+        +'<div style="display:flex;justify-content:center;margin-bottom:4px;">'+ring(m.p,50)+'</div>'
+        +'<div style="font-size:12px;font-weight:600;">'+m.n+'</div>'
+        +'<div style="font-size:10px;color:'+col+';margin-top:2px;font-weight:600;">'+m.today+'</div>'
+        +'<div style="font-size:9px;color:#48484A;">kcal</div>'
+        +'</div>';
+    }).join('');
+  }
+
+  /* 未打卡 */
+  if(unchecked.length>0){
+    var enc=ENCS[new Date().getDay()%ENCS.length];
+    document.getElementById('day-unchecked-card').innerHTML=
+      '<div style="background:#1C1C1E;border-radius:13px;padding:14px;">'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">'
+        +'<div style="font-size:10px;color:#FF2D55;font-weight:700;letter-spacing:0.8px;">⏰ 还没打卡的队友 · '+unchecked.length+'人</div>'
+      +'</div>'
+      +'<div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px;">'
+        +unchecked.map(function(m){
+          return '<div style="background:#2C2C2E;border-radius:7px;padding:5px 10px;font-size:12px;color:#636366;">'+m.n+'</div>';
+        }).join('')
+      +'</div>'
+      +'<div style="background:#2C2C2E;border-radius:8px;padding:10px 12px;font-size:12px;color:#d4d4d4;font-style:italic;line-height:1.65;">'+enc+'</div>'
+      +'</div>';
+  }
+
+  /* 今日黑马 */
+  var dh=PF.darkHorse;
+  document.getElementById('day-darkhorse').innerHTML=
+    '<div style="background:#1C1C1E;border-left:3px solid #0A84FF;border-radius:0 13px 13px 0;padding:13px 14px;display:flex;align-items:center;gap:12px;">'
+    +'<span style="font-size:22px;flex-shrink:0;">⚡</span>'
+    +'<div style="flex:1;min-width:0;">'
+      +'<div style="font-size:9px;color:#0A84FF;font-weight:700;letter-spacing:0.8px;margin-bottom:3px;">今日黑马</div>'
+      +'<div style="font-size:15px;font-weight:700;">'+dh.name+'</div>'
+      +'<div style="font-size:11px;color:#636366;margin-top:1px;">7日均值 '+fmt(dh.avg7)+' → 今日 '+fmt(dh.todayKcal)+' kcal</div>'
+    +'</div>'
+    +'<div style="font-size:22px;font-weight:800;color:#0A84FF;flex-shrink:0;">+'+dh.pct+'%</div>'
+    +'</div>';
+
+  /* 本月进度 grid */
+  document.getElementById('day-monthly-grid').innerHTML=M.map(function(m,i){
+    var ck=m.today>0;
+    return '<div class="mc" onclick="showDayMember('+i+')" style="background:#1C1C1E;border-radius:11px;padding:10px 4px 9px;text-align:center;'+(ck?'border:0.5px solid #30D15838':'')+';">'
+      +'<div style="display:flex;justify-content:center;margin-bottom:5px;">'+ring(m.p,54)+'</div>'
+      +'<div style="font-size:12px;font-weight:600;">'+m.n+'</div>'
+      +'<div style="width:5px;height:5px;border-radius:50%;background:'+(ck?'#30D158':'transparent')+';margin:4px auto 0;"></div>'
+      +'</div>';
+  }).join('');
+}
+
+/* ══════════════════════════════════════
+   周报渲染
+══════════════════════════════════════ */
+function renderWeekTab(){
+  window._wkDone=true;
+  var wh=PF.weekHero;
+
+  /* 标题 */
+  document.getElementById('week-header').innerHTML=
+    '<div style="font-size:12px;color:#636366;margin-bottom:4px;">'+PF.weekLabel+'</div>'
+    +'<div style="font-size:20px;font-weight:800;margin-bottom:16px;">本周战报</div>';
+
+  /* 领风者 */
+  document.getElementById('week-hero').innerHTML=
+    '<div style="background:#1C1C1E;border-radius:16px;padding:18px;border:0.5px solid #30D15845;">'
+    +'<div style="font-size:9px;color:#30D158;font-weight:700;letter-spacing:1.2px;margin-bottom:12px;">本周领风者</div>'
+    +'<div style="display:flex;align-items:center;gap:14px;">'
+      +'<div style="flex-shrink:0;">'+ring(wh.monthP,90)+'</div>'
+      +'<div style="flex:1;min-width:0;">'
+        +'<div style="font-size:26px;font-weight:800;line-height:1;">'+wh.name+'</div>'
+        +'<div style="font-size:12px;color:#636366;margin-top:3px;">'+wh.sport+' · 本周'+wh.days+'次打卡</div>'
+        +'<div style="font-size:20px;font-weight:700;color:#30D158;margin-top:6px;">'+fmt(wh.weekKcal)+' <span style="font-size:12px;color:#48484A;font-weight:400;">kcal 本周</span></div>'
+      +'</div>'
+      +'<div style="text-align:right;flex-shrink:0;">'
+        +'<div style="font-size:10px;color:#636366;">月度完成</div>'
+        +'<div style="font-size:20px;font-weight:800;color:#30D158;">'+wh.monthP+'%</div>'
+      +'</div>'
+    +'</div>'
+    +'</div>';
+
+  /* 周度荣耀 */
+  document.getElementById('week-awards').innerHTML=
+    '<div class="sl">本周荣耀</div>'+PF.weekAwards.map(awardRow).join('');
+
+  /* 每日折线图 */
+  new Chart(document.getElementById('wk-chart').getContext('2d'),{
+    type:'bar',
+    data:{
+      labels:PF.weekDays,
+      datasets:[
+        {type:'bar',  data:PF.weekData, backgroundColor:'#30D15825',borderColor:'#30D158',borderWidth:1.5,borderRadius:5},
+        {type:'line', data:new Array(PF.weekData.length).fill(PF.weekAvgLine),
+         borderColor:'#3A3A3C',borderDash:[4,3],pointRadius:0,fill:false,borderWidth:1.5,tension:0}
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{
+        x:{ticks:{color:'#636366',font:{size:10}},grid:{color:'#1C1C1E'},border:{color:'#1C1C1E'}},
+        y:{ticks:{color:'#636366',font:{size:10},callback:function(v){return (v/1000).toFixed(0)+'k';}},grid:{color:'#2C2C2E'},border:{color:'#2C2C2E'}}
+      }}
+  });
+
+  /* 本周成员明细 */
+  var sorted=[].concat(PF.members).sort(function(a,b){return b.wk-a.wk;});
+  var maxWk=sorted[0].wk;
+  document.getElementById('week-members').innerHTML=sorted.map(function(m,i){
+    var col=gc(m.p),bw=m.wk/maxWk*100;
+    return '<div style="display:flex;align-items:center;gap:8px;padding:7px 0;'+(i>0?'border-top:0.5px solid #2C2C2E':'')+'">'
+      +'<div style="font-size:11px;color:#636366;width:16px;text-align:right;">'+(i+1)+'</div>'
+      +'<div style="font-size:13px;font-weight:600;width:30px;flex-shrink:0;">'+m.n+'</div>'
+      +'<div style="flex:1;min-width:0;">'
+        +'<div style="height:5px;background:#2C2C2E;border-radius:3px;overflow:hidden;margin-bottom:3px;">'
+          +'<div style="height:100%;background:'+col+';border-radius:3px;width:'+bw+'%;"></div>'
+        +'</div>'
+        +'<div style="font-size:9px;color:#48484A;">'+m.wd+'次打卡</div>'
+      +'</div>'
+      +'<div style="font-size:13px;font-weight:700;color:'+col+';min-width:44px;text-align:right;">'+fmt(m.wk)+'</div>'
+      +'</div>';
+  }).join('');
+
+  /* 历史周冠军 */
+  document.getElementById('week-champs').innerHTML=PF.weekChamps.map(function(wc){
+    var cur=wc.cur;
+    return '<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:'+(cur?'#1C1C3A':'#1C1C1E')+';border-radius:9px;margin-bottom:4px;'+(cur?'border:0.5px solid #30D15845':'')+';">'
+      +'<div style="font-size:10px;color:#636366;flex:1;">'+wc.w+(cur?' <span style="color:#30D158;font-size:9px;">· 本周</span>':'')+'</div>'
+      +'<div style="font-size:14px;font-weight:700;color:'+(cur?'#30D158':'#FF9F0A')+';min-width:28px;text-align:center;">'+wc.n+'</div>'
+      +'<div style="font-size:12px;color:#636366;min-width:52px;text-align:right;">'+fmt(wc.k)+' kcal</div>'
+      +'</div>';
+  }).join('');
+}
+
+/* ══════════════════════════════════════
+   月报渲染
+══════════════════════════════════════ */
+function renderMonthTab(){
+  window._mkDone=true;
+  var M=PF.members;
+
+  /* 月报标题 */
+  document.getElementById('month-header').innerHTML=
+    '<div style="font-size:12px;color:#636366;margin-bottom:4px;">'+PF.month+'</div>'
+    +'<div style="font-size:20px;font-weight:800;margin-bottom:16px;">月度总结</div>';
+
+  /* 团队概览 */
+  var totalMonthly=M.reduce(function(s,m){return s+m.monthly;},0);
+  var avgP=Math.round(M.reduce(function(s,m){return s+m.p;},0)/M.length);
+  var totalFat=(totalMonthly/7700).toFixed(1);
+  var chickensAll=Math.round(totalMonthly/290);
+  var达标=M.filter(function(m){return m.p>=100;}).length;
+  document.getElementById('month-overview').innerHTML=
+    '<div style="background:#1C1C1E;border-radius:16px;padding:16px;">'
+    +'<div class="sl">团队月度概览</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">'
+      +'<div style="background:#2C2C2E;border-radius:11px;padding:12px;">'
+        +'<div style="font-size:10px;color:#636366;margin-bottom:4px;">团队月度消耗</div>'
+        +'<div style="font-size:17px;font-weight:700;color:#FF9F0A;">'+fmt(totalMonthly)+' <span style="font-size:10px;color:#48484A;font-weight:400;">kcal</span></div></div>'
+      +'<div style="background:#2C2C2E;border-radius:11px;padding:12px;">'
+        +'<div style="font-size:10px;color:#636366;margin-bottom:4px;">团队平均完成</div>'
+        +'<div style="font-size:17px;font-weight:700;color:#30D158;">'+avgP+'%</div></div>'
+      +'<div style="background:#2C2C2E;border-radius:11px;padding:12px;">'
+        +'<div style="font-size:10px;color:#636366;margin-bottom:4px;">全员等效燃脂</div>'
+        +'<div style="font-size:17px;font-weight:700;color:#0A84FF;">'+totalFat+' <span style="font-size:10px;color:#48484A;font-weight:400;">kg</span></div></div>'
+      +'<div style="background:#2C2C2E;border-radius:11px;padding:12px;">'
+        +'<div style="font-size:10px;color:#636366;margin-bottom:4px;">达标人数</div>'
+        +'<div style="font-size:17px;font-weight:700;color:#30D158;">'+达标+' <span style="font-size:10px;color:#48484A;font-weight:400;">/ '+M.length+'人</span></div></div>'
+    +'</div>'
+    +'<div style="background:#2C2C2E;border-radius:9px;padding:10px 12px;font-size:12px;color:#d4d4d4;line-height:1.85;">'
+      +'全队'+PF.month.replace('年','年').replace('月','月')+'共燃 '+fmt(totalMonthly)+' kcal<br>'
+      +'🍗 相当于 <span style="color:#FF9F0A;font-weight:600;">'+chickensAll+' 个炸鸡腿</span> · 少胖了合计 <span style="color:#30D158;font-weight:600;">'+totalFat+' kg</span>'
+    +'</div>'
+    +'</div>';
+
+  /* 月度荣耀 */
+  document.getElementById('month-awards').innerHTML=
+    '<div class="sl">月度荣耀</div>'+PF.monthAwards.map(awardRow).join('');
+
+  /* 全员群像 */
+  var sorted=[].concat(M).sort(function(a,b){return b.p-a.p;});
+  document.getElementById('month-group').innerHTML=sorted.map(function(m,i){
+    var col=gc(m.p);
+    var chickens=Math.round(m.monthly/290);
+    var kgSaved=(m.monthly/7700).toFixed(1);
+    var progStr=m.lm>0
+      ? (function(){var pct=Math.round((m.monthly-m.lm)/m.lm*100);
+          return '<span style="color:'+(pct>=0?'#30D158':'#FF2D55')+';font-size:10px;font-weight:600;">'+(pct>=0?'↑':'↓')+Math.abs(pct)+'%</span>';}())
+      : '<span style="color:#636366;font-size:10px;">首次参与</span>';
+    var rank=i+1,rankStr=rank<=3?['🥇','🥈','🥉'][rank-1]:'<span style="color:#636366;font-size:10px;">#'+rank+'</span>';
+    return '<div class="mc" onclick="showMonthMember('+M.indexOf(m)+')" style="background:#1C1C1E;border-radius:13px;padding:14px 12px;">'
+      +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">'
+        +'<div>'+ring(m.p,52)+'</div>'
+        +'<div style="flex:1;min-width:0;">'
+          +'<div style="font-size:15px;font-weight:700;">'+m.n+'</div>'
+          +'<div style="font-size:10px;color:#636366;">'+m.g+' · '+rankStr+'</div>'
+        +'</div>'
+      +'</div>'
+      +'<div style="font-size:18px;font-weight:700;color:'+col+';margin-bottom:2px;">'+fmt(m.monthly)+'<span style="font-size:10px;color:#48484A;font-weight:400;margin-left:3px;">kcal</span></div>'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-top:7px;">'
+        +'<div style="font-size:11px;color:#FF9F0A;">🍗 '+chickens+'个</div>'
+        +'<div style="font-size:11px;color:#0A84FF;">少胖 '+kgSaved+'kg</div>'
+      +'</div>'
+      +'<div style="margin-top:6px;padding-top:6px;border-top:0.5px solid #2C2C2E;display:flex;justify-content:space-between;align-items:center;">'
+        +'<div style="font-size:10px;color:#636366;">环比上月</div>'+progStr
+      +'</div>'
+      +'</div>';
+  }).join('');
+
+  /* 破风基金 */
+  var f=PF.fund;
+  document.getElementById('month-fund').innerHTML=
+    '<div style="background:#1C1C1E;border-radius:13px;padding:14px;border:0.5px solid #FF9F0A30;">'
+    +'<div style="font-size:10px;color:#FF9F0A;font-weight:700;letter-spacing:1px;margin-bottom:12px;text-transform:uppercase;">破风基金 · '+PF.month+'结算</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">'
+      +'<div style="background:#2C2C2E;border-radius:9px;padding:10px;"><div style="font-size:10px;color:#636366;margin-bottom:4px;">达标人数</div><div style="font-size:18px;font-weight:700;color:#30D158;">'+f.达标+'人</div></div>'
+      +'<div style="background:#2C2C2E;border-radius:9px;padding:10px;"><div style="font-size:10px;color:#636366;margin-bottom:4px;">未达标</div><div style="font-size:18px;font-weight:700;color:#FF2D55;">'+f.未达标+'人</div></div>'
+      +'<div style="background:#2C2C2E;border-radius:9px;padding:10px;"><div style="font-size:10px;color:#636366;margin-bottom:4px;">本月新增</div><div style="font-size:18px;font-weight:700;color:#FF9F0A;">¥'+fmt(f.新增)+'</div></div>'
+      +'<div style="background:#2C2C2E;border-radius:9px;padding:10px;"><div style="font-size:10px;color:#636366;margin-bottom:4px;">累计基金池</div><div style="font-size:18px;font-weight:700;color:#FF9F0A;">¥'+fmt(f.累计)+'</div></div>'
+    +'</div>'
+    +(f.豁免?'<div style="font-size:11px;color:#636366;">病假豁免：'+f.豁免+'</div>':'')
+    +'</div>';
+}
+
+/* ══════════════════════════════════════
+   规则页：本月各人实际目标
+══════════════════════════════════════ */
+function renderRulesTargets(){
+  /* 倒计时 */
+  document.getElementById('r-countdown').innerHTML=
+    '<div style="font-size:10px;color:#636366;margin-bottom:3px;">倒计时</div>'
+    +'<div style="font-size:15px;font-weight:700;color:#FF2D55;">'+PF.daysLeft+'天</div>';
+
+  document.getElementById('r-targets-month').textContent=PF.month;
+
+  var M=PF.members;
+  var adjusted=M.filter(function(m){return m.targetNote&&m.targetNote!=='';});
+  var baseM=7000, baseF=4800;
+
+  document.getElementById('r-targets').innerHTML=M.map(function(m){
+    var isAdj=m.targetNote&&m.targetNote!=='';
+    var col=isAdj?'#FF9F0A':'#d4d4d4';
+    var bg=isAdj?'#2C1E00':'#2C2C2E';
+    return '<div style="background:'+bg+';border-radius:9px;padding:9px 10px;'+(isAdj?'border:0.5px solid #FF9F0A40':'')+';">'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px;">'
+        +'<span style="font-size:13px;font-weight:600;color:'+col+';">'+m.n+'</span>'
+        +'<span style="font-size:10px;color:#48484A;">'+m.g+'</span>'
+      +'</div>'
+      +'<div style="font-size:15px;font-weight:700;color:'+col+';">'+fmt(m.target)+' <span style="font-size:9px;color:#48484A;font-weight:400;">kcal</span></div>'
+      +(isAdj?'<div style="font-size:9px;color:#FF9F0A;margin-top:3px;">'+m.targetNote+'</div>':'')
+      +'</div>';
+  }).join('');
+
+  if(adjusted.length>0){
+    document.getElementById('r-targets-note').textContent=
+      '本月 '+adjusted.length+' 人目标有调整（高亮显示），其余均为基础目标。';
+  }
+}
+
+/* ══════════════════════════════════════
+   Layer 2：日报进入 — 月度累计趋势
+══════════════════════════════════════ */
+function showDayMember(i){
+  var m=PF.members[i], col=gc(m.p);
+  _openDetail('day');
+  document.getElementById('detail-content').innerHTML=
+    '<div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;">'
+      +'<div style="flex-shrink:0;">'+ring(m.p,86)+'</div>'
+      +'<div style="flex:1;min-width:0;">'
+        +'<div style="font-size:26px;font-weight:800;line-height:1;">'+m.n+'</div>'
+        +'<div style="font-size:12px;color:#636366;margin-top:3px;">'+m.g+' · 本月目标 '+fmt(m.target)+' kcal</div>'
+        +'<div style="font-size:15px;font-weight:700;color:'+col+';margin-top:6px;">本月完成 '+m.p+'%</div>'
+      +'</div>'
+    +'</div>'
+    +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;">'
+      +'<div style="background:#1C1C1E;border-radius:11px;padding:12px 10px;"><div style="font-size:10px;color:#636366;margin-bottom:4px;">连续打卡</div><div style="font-size:20px;font-weight:700;color:#FF9F0A;">'+m.s+'<span style="font-size:11px;color:#48484A;font-weight:400;">天</span></div></div>'
+      +'<div style="background:#1C1C1E;border-radius:11px;padding:12px 10px;"><div style="font-size:10px;color:#636366;margin-bottom:4px;">今日消耗</div><div style="font-size:20px;font-weight:700;color:#0A84FF;">'+(m.today>0?fmt(m.today):'—')+'</div></div>'
+      +'<div style="background:#1C1C1E;border-radius:11px;padding:12px 10px;"><div style="font-size:10px;color:#636366;margin-bottom:4px;">月累计</div><div style="font-size:20px;font-weight:700;color:'+col+';">'+Math.round(m.monthly/1000*10)/10+'k</div></div>'
+    +'</div>'
+    +'<div style="background:#1C1C1E;border-radius:13px;padding:14px;">'
+      +'<div class="sl" style="margin-bottom:14px;">近7天月度累计趋势</div>'
+      +'<div style="position:relative;height:160px;"><canvas id="dc"></canvas></div>'
+    +'</div>';
+  _destroyCharts();
+  setTimeout(function(){
+    detailChart=new Chart(document.getElementById('dc').getContext('2d'),{
+      type:'line',
+      data:{labels:['4/23','4/24','4/25','4/26','4/27','4/28','4/29'],
+        datasets:[
+          {data:m.h,borderColor:col,backgroundColor:col+'15',fill:true,tension:.42,
+           pointBackgroundColor:col,pointRadius:4,pointHoverRadius:6,borderWidth:2},
+          {data:new Array(7).fill(m.target),borderColor:'#3A3A3C',borderDash:[5,3],
+           pointRadius:0,fill:false,borderWidth:1.5}
+        ]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+        scales:{x:{ticks:{color:'#636366',font:{size:10}},grid:{color:'#2C2C2E'},border:{color:'#2C2C2E'}},
+                y:{ticks:{color:'#636366',font:{size:10}},grid:{color:'#2C2C2E'},border:{color:'#2C2C2E'}}}}
+    });
+  },50);
+}
+
+/* ══════════════════════════════════════
+   Layer 2：月报进入 — 饼图 + 分周柱状
+══════════════════════════════════════ */
+function showMonthMember(i){
+  var m=PF.members[i], col=gc(m.p);
+  _openDetail('month');
+  var chickens=Math.round(m.monthly/290);
+  var colas=Math.round(m.monthly/140);
+  var burgers=Math.round(m.monthly/500);
+  var kgFat=(m.monthly/7700).toFixed(2);
+  var jin=(m.monthly/7700*2).toFixed(1);
+  var progHtml=m.lm>0
+    ?(function(){var pct=Math.round((m.monthly-m.lm)/m.lm*100);
+       return '<span style="color:'+(pct>=0?'#30D158':'#FF2D55')+';font-weight:700;">'+(pct>=0?'↑':'↓')+Math.abs(pct)+'%</span> 环比上月';}())
+    :'首次参与月度打卡';
+  var sportKcals=m.sd.map(function(p){return Math.round(m.monthly*p/100);});
+
+  document.getElementById('detail-content').innerHTML=
+    '<div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;">'
+      +'<div style="flex-shrink:0;">'+ring(m.p,86)+'</div>'
+      +'<div style="flex:1;min-width:0;">'
+        +'<div style="font-size:26px;font-weight:800;line-height:1;">'+m.n+'</div>'
+        +'<div style="font-size:12px;color:#636366;margin-top:3px;">'+m.g+' · 本月目标 '+fmt(m.target)+' kcal'+(m.targetNote?' · <span style="color:#FF9F0A;">'+m.targetNote+'</span>':'')+'</div>'
+        +'<div style="font-size:13px;color:#8E8E93;margin-top:5px;">'+progHtml+'</div>'
+      +'</div>'
+    +'</div>'
+    +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;">'
+      +'<div style="background:#1C1C1E;border-radius:11px;padding:12px 10px;text-align:center;"><div style="font-size:10px;color:#636366;margin-bottom:4px;">月度消耗</div><div style="font-size:16px;font-weight:700;color:'+col+';">'+fmt(m.monthly)+'</div><div style="font-size:9px;color:#48484A;">kcal</div></div>'
+      +'<div style="background:#1C1C1E;border-radius:11px;padding:12px 10px;text-align:center;"><div style="font-size:10px;color:#636366;margin-bottom:4px;">完成率</div><div style="font-size:16px;font-weight:700;color:'+col+';">'+m.p+'%</div><div style="font-size:9px;color:#48484A;">本月目标</div></div>'
+      +'<div style="background:#1C1C1E;border-radius:11px;padding:12px 10px;text-align:center;"><div style="font-size:10px;color:#636366;margin-bottom:4px;">连续打卡</div><div style="font-size:16px;font-weight:700;color:#FF9F0A;">'+m.s+'</div><div style="font-size:9px;color:#48484A;">天</div></div>'
+    +'</div>'
+    +'<div style="background:#1C1C1E;border-radius:13px;padding:14px;margin-bottom:14px;">'
+      +'<div class="sl" style="margin-bottom:12px;">运动等效换算</div>'
+      +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;">'
+        +'<div style="background:#2C2C2E;border-radius:10px;padding:11px 8px;text-align:center;"><div style="font-size:20px;margin-bottom:4px;">🍗</div><div style="font-size:16px;font-weight:700;color:#FF9F0A;">'+chickens+'</div><div style="font-size:9px;color:#636366;margin-top:2px;">个炸鸡腿</div></div>'
+        +'<div style="background:#2C2C2E;border-radius:10px;padding:11px 8px;text-align:center;"><div style="font-size:20px;margin-bottom:4px;">🥤</div><div style="font-size:16px;font-weight:700;color:#0A84FF;">'+colas+'</div><div style="font-size:9px;color:#636366;margin-top:2px;">罐可乐</div></div>'
+        +'<div style="background:#2C2C2E;border-radius:10px;padding:11px 8px;text-align:center;"><div style="font-size:20px;margin-bottom:4px;">🍔</div><div style="font-size:16px;font-weight:700;color:#FF2D55;">'+burgers+'</div><div style="font-size:9px;color:#636366;margin-top:2px;">个汉堡</div></div>'
+      +'</div>'
+      +'<div style="background:#2C2C2E;border-radius:9px;padding:10px 12px;font-size:12px;color:#d4d4d4;line-height:1.75;">'
+        +'这个月的运动让你少胖了 <span style="color:#30D158;font-weight:700;">'+jin+' 斤</span>（约 '+kgFat+' kg 脂肪储存）🎉'
+      +'</div>'
+    +'</div>'
+    +'<div style="background:#1C1C1E;border-radius:13px;padding:14px;margin-bottom:14px;">'
+      +'<div class="sl" style="margin-bottom:12px;">运动类型分布</div>'
+      +'<div style="display:flex;align-items:center;gap:14px;">'
+        +'<div style="flex-shrink:0;width:110px;height:110px;position:relative;"><canvas id="dc-pie"></canvas></div>'
+        +'<div style="flex:1;min-width:0;" id="dc-pie-legend"></div>'
+      +'</div>'
+    +'</div>'
+    +'<div style="background:#1C1C1E;border-radius:13px;padding:14px;">'
+      +'<div class="sl" style="margin-bottom:12px;">本月分周消耗</div>'
+      +'<div style="position:relative;height:140px;"><canvas id="dc-bar"></canvas></div>'
+    +'</div>';
+
+  _destroyCharts();
+  setTimeout(function(){
+    /* 饼图 */
+    detailChart=new Chart(document.getElementById('dc-pie').getContext('2d'),{
+      type:'doughnut',
+      data:{labels:SPORT_LABELS,datasets:[{data:sportKcals,
+        backgroundColor:SPORT_COLORS.map(function(c){return c+'BB';}),
+        borderColor:SPORT_COLORS,borderWidth:1.5,hoverOffset:4}]},
+      options:{responsive:false,cutout:'62%',plugins:{legend:{display:false},
+        tooltip:{callbacks:{label:function(ctx){return ctx.label+': '+ctx.parsed+' kcal';}}}}}
+    });
+    document.getElementById('dc-pie-legend').innerHTML=SPORT_LABELS.map(function(lbl,j){
+      if(!sportKcals[j]) return '';
+      return '<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">'
+        +'<div style="width:8px;height:8px;border-radius:50%;background:'+SPORT_COLORS[j]+';flex-shrink:0;"></div>'
+        +'<div style="flex:1;font-size:11px;color:#d4d4d4;">'+lbl+'</div>'
+        +'<div style="font-size:11px;color:'+SPORT_COLORS[j]+';font-weight:600;">'+m.sd[j]+'%</div>'
+        +'</div>';
+    }).join('');
+
+    /* 分周柱状 */
+    var wkTgt=Math.round(m.target/4.3);
+    detailChart2=new Chart(document.getElementById('dc-bar').getContext('2d'),{
+      type:'bar',
+      data:{labels:['第1周','第2周','第3周','第4周'],
+        datasets:[
+          {data:m.mwk,backgroundColor:col+'55',borderColor:col,borderWidth:1.5,borderRadius:5},
+          {type:'line',data:new Array(4).fill(wkTgt),borderColor:'#3A3A3C',borderDash:[4,3],
+           pointRadius:0,fill:false,borderWidth:1.5}
+        ]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+        scales:{x:{ticks:{color:'#636366',font:{size:10}},grid:{color:'#1C1C1E'},border:{color:'#1C1C1E'}},
+                y:{ticks:{color:'#636366',font:{size:10}},grid:{color:'#2C2C2E'},border:{color:'#2C2C2E'}}}}
+    });
+  },60);
+}
+
+function _openDetail(origin){
+  currentTab=currentTab; // keep
+  TABS.forEach(function(t){document.getElementById('v-'+t.id).style.display='none';});
+  document.getElementById('v-detail').style.display='block';
+  document.getElementById('v-detail').dataset.origin=origin;
+  window.scrollTo(0,0);
+}
+
+function _destroyCharts(){
+  if(detailChart){detailChart.destroy();detailChart=null;}
+  if(detailChart2){detailChart2.destroy();detailChart2=null;}
+}
+
+function backFromDetail(){
+  _destroyCharts();
+  document.getElementById('v-detail').style.display='none';
+  document.getElementById('v-'+currentTab).style.display='block';
+  window.scrollTo(0,0);
+}
+
+/* ══════════════════════════════════════
+   启动
+══════════════════════════════════════ */
+renderDayTab();
+renderRulesTargets();
+</script>
+</body>
+</html>
