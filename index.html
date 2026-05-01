@@ -2,692 +2,1380 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>破风前行 · 团队数据看板</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#000000">
+<title>破风前行 · 运动战报</title>
 <style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body {
-    background: #000000;
-    color: #FFFFFF;
-    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
-    min-height: 100vh;
-    overflow-x: hidden;
-}
-.container { max-width: 1200px; margin: 0 auto; padding: 16px; }
-
-/* Hero */
-.hero {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 24px;
-    padding: 0 4px;
-}
-.hero-title { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
-.hero-meta { font-size: 14px; color: #8E8E93; margin-top: 4px; }
-.countdown { text-align: right; }
-.countdown-days { font-size: 32px; font-weight: 700; color: #FF2D55; }
-.countdown-label { font-size: 12px; color: #8E8E93; }
-
-/* Stats cards */
-.stats-row {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
-    margin-bottom: 24px;
-}
-.stat-card {
-    background: #1C1C1E;
-    border-radius: 12px;
-    padding: 20px 16px;
-    text-align: center;
-}
-.stat-value {
-    font-size: 36px;
-    font-weight: 700;
-    color: #FF2D55;
-    margin-bottom: 4px;
-}
-.stat-label { font-size: 13px; color: #8E8E93; }
-
-/* Awards */
-.awards-section {
-    background: #1C1C1E;
-    border-radius: 12px;
-    padding: 20px;
-    margin-bottom: 24px;
-}
-.awards-title {
-    font-size: 18px;
-    font-weight: 600;
-    margin-bottom: 16px;
-    color: #FF9F0A;
-}
-.award-item {
-    display: flex;
-    align-items: center;
-    padding: 10px 0;
-    border-bottom: 1px solid #38383A;
-}
-.award-item:last-child { border-bottom: none; }
-.award-name { font-weight: 600; min-width: 100px; color: #FFFFFF; }
-.award-winner { flex: 1; color: #FFFFFF; }
-.award-value { color: #FF9F0A; font-weight: 600; }
-
-/* Member cards grid */
-.members-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-}
-@media (min-width: 768px) {
-    .members-grid { grid-template-columns: repeat(4, 1fr); }
-}
-.member-card {
-    background: #1C1C1E;
-    border-radius: 12px;
-    padding: 16px;
-    cursor: pointer;
-    transition: transform 0.2s;
-    position: relative;
-}
-.member-card:hover { transform: scale(1.02); }
-.member-name { font-size: 18px; font-weight: 600; margin-bottom: 12px; }
-.progress-ring-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-bottom: 12px;
-    position: relative;
-}
-.progress-ring-svg {
-    width: 80px;
-    height: 80px;
-    transform: rotate(-90deg);
-}
-.progress-ring-circle {
-    fill: none;
-    stroke-width: 8;
-}
-.progress-ring-bg { stroke: #2C2C2E; }
-.progress-ring-fg { stroke-linecap: round; transition: stroke-dasharray 0.5s; }
-.progress-text {
-    position: absolute;
-    font-size: 16px;
-    font-weight: 700;
-}
-.streak-badge {
-    display: inline-block;
-    background: #30D158;
-    color: #000;
-    padding: 2px 8px;
-    border-radius: 10px;
-    font-size: 12px;
-    font-weight: 600;
-    margin-bottom: 8px;
-}
-.today-kcal {
-    font-size: 20px;
-    font-weight: 700;
-    color: #FF2D55;
-}
-.today-kcal.pending { color: #8E8E93; font-size: 14px; }
-
-/* Layer 2 overlay */
-.overlay {
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: #000000;
-    z-index: 1000;
-    overflow-y: auto;
-    display: none;
-}
-.overlay.active { display: block; }
-.overlay-header {
-    display: flex;
-    align-items: center;
-    padding: 16px;
-    border-bottom: 1px solid #38383A;
-    position: sticky;
-    top: 0;
-    background: #000000;
-    z-index: 10;
-}
-.back-btn {
-    background: none;
-    border: none;
-    color: #0A84FF;
-    font-size: 16px;
-    cursor: pointer;
-    margin-right: 12px;
-}
-.overlay-title { font-size: 20px; font-weight: 700; }
-.overlay-content { padding: 16px; max-width: 800px; margin: 0 auto; }
-
-/* Summary stats in overlay */
-.summary-row {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 12px;
-    margin: 20px 0;
-}
-.summary-card {
-    background: #1C1C1E;
-    border-radius: 12px;
-    padding: 16px;
-    text-align: center;
-}
-.summary-value { font-size: 24px; font-weight: 700; color: #FF2D55; }
-.summary-label { font-size: 12px; color: #8E8E93; margin-top: 4px; }
-
-/* Chart containers */
-.chart-container {
-    background: #1C1C1E;
-    border-radius: 12px;
-    padding: 16px;
-    margin-bottom: 16px;
-}
-.chart-title { font-size: 16px; font-weight: 600; margin-bottom: 12px; }
-
-/* Heatmap */
-.heatmap-month {
-    margin-bottom: 20px;
-}
-.heatmap-month-title {
-    font-size: 14px;
-    color: #8E8E93;
-    margin-bottom: 8px;
-}
-.heatmap-grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 4px;
-}
-.heatmap-cell {
-    aspect-ratio: 1;
-    border-radius: 4px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 10px;
-}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{background:#000;min-height:100%;}
+body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',Helvetica,sans-serif;color:#fff;-webkit-font-smoothing:antialiased;overflow-x:hidden;}
+::-webkit-scrollbar{display:none;}*{scrollbar-width:none;}
+#app{max-width:480px;margin:0 auto;min-height:100vh;padding-bottom:max(24px,env(safe-area-inset-bottom));}
+.sbar{position:sticky;top:0;background:#000;z-index:100;}
+.tbtn{padding:5px 12px;border-radius:8px;border:none;cursor:pointer;font-family:-apple-system,sans-serif;-webkit-tap-highlight-color:transparent;transition:background .15s,color .15s;}
+.mc{cursor:pointer;-webkit-tap-highlight-color:transparent;transition:opacity .12s;}
+.mc:active{opacity:.5;}
+.aw+.aw{border-top:0.5px solid #2C2C2E;}
+.aw{display:flex;align-items:center;gap:10px;padding:10px 0;}
+.sl{font-size:10px;color:#636366;font-weight:700;letter-spacing:1px;margin-bottom:10px;text-transform:uppercase;}
+@media(max-width:360px){.tbtn{padding:5px 9px!important;font-size:12px!important;}}
 </style>
 </head>
 <body>
+<div id="app">
 
-<div class="container" id="layer1">
-    <div class="hero">
-        <div>
-            <div class="hero-title">破风前行</div>
-            <div class="hero-meta">2026年04月29日 · 第W18周 · 昨日</div>
-        </div>
-        <div class="countdown">
-            <div class="countdown-days">336</div>
-            <div class="countdown-label">距2027年3月31日</div>
-        </div>
-    </div>
-    
-    <div class="stats-row">
-        <div class="stat-card">
-            <div class="stat-value">2/16</div>
-            <div class="stat-label">今日打卡人数</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-value">864</div>
-            <div class="stat-label">今日全队总热量</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-value">432</div>
-            <div class="stat-label">今日人均热量</div>
-        </div>
-    </div>
-    
-    <div class="awards-section">
-        <div class="awards-title">本期荣耀</div>
-        <div class="award-item">
-            <div class="award-name">🥇 Top1</div>
-            <div class="award-winner">陈雷</div>
-            <div class="award-value">466 kcal</div>
-        </div>
-        <div class="award-item">
-            <div class="award-name">🥈 Top2</div>
-            <div class="award-winner">福远</div>
-            <div class="award-value">398 kcal</div>
-        </div>
-        <div class="award-item">
-            <div class="award-name">今日黑马</div>
-            <div class="award-winner">陈雷</div>
-            <div class="award-value">+232%</div>
-        </div>
-        <div class="award-item">
-            <div class="award-name">今日金句</div>
-            <div class="award-winner">陈雷</div>
-            <div class="award-value">破风前行，遇见更好的自己</div>
-        </div>
-        <div class="award-item">
-            <div class="award-name">领风者</div>
-            <div class="award-winner">陈雷</div>
-            <div class="award-value">466 kcal</div>
-        </div>
-        <div class="award-item">
-            <div class="award-name">言出必行</div>
-            <div class="award-winner">之奥, 太宇, 晓识</div>
-            <div class="award-value">连续4周</div>
-        </div>
-    </div>
-    
-    <div class="members-grid">
-        <div class="member-card" onclick="showMember('雷加')">
-            <div class="member-name">雷加</div>
-            <div class="progress-ring-container">
-                <svg class="progress-ring-svg" viewBox="0 0 80 80">
-                    <circle class="progress-ring-circle progress-ring-bg" cx="40" cy="40" r="35"/>
-                    <circle class="progress-ring-circle progress-ring-fg" cx="40" cy="40" r="35" 
-                        stroke="#30D158" stroke-dasharray="219.91129999999998" stroke-dashoffset="0.0"/>
-                </svg>
-                <div class="progress-text">102%</div>
-            </div>
-            <div style="text-align:center;">
-                <span class="streak-badge">0天</span>
-            </div>
-            <div class="today-kcal pending" style="text-align:center;">今日待打卡</div>
-        </div>
-        <div class="member-card" onclick="showMember('婉思')">
-            <div class="member-name">婉思</div>
-            <div class="progress-ring-container">
-                <svg class="progress-ring-svg" viewBox="0 0 80 80">
-                    <circle class="progress-ring-circle progress-ring-bg" cx="40" cy="40" r="35"/>
-                    <circle class="progress-ring-circle progress-ring-fg" cx="40" cy="40" r="35" 
-                        stroke="#30D158" stroke-dasharray="219.91129999999998" stroke-dashoffset="0.0"/>
-                </svg>
-                <div class="progress-text">123%</div>
-            </div>
-            <div style="text-align:center;">
-                <span class="streak-badge">0天</span>
-            </div>
-            <div class="today-kcal pending" style="text-align:center;">今日待打卡</div>
-        </div>
-        <div class="member-card" onclick="showMember('伊竹')">
-            <div class="member-name">伊竹</div>
-            <div class="progress-ring-container">
-                <svg class="progress-ring-svg" viewBox="0 0 80 80">
-                    <circle class="progress-ring-circle progress-ring-bg" cx="40" cy="40" r="35"/>
-                    <circle class="progress-ring-circle progress-ring-fg" cx="40" cy="40" r="35" 
-                        stroke="#30D158" stroke-dasharray="219.91129999999998" stroke-dashoffset="0.0"/>
-                </svg>
-                <div class="progress-text">158%</div>
-            </div>
-            <div style="text-align:center;">
-                <span class="streak-badge">3天</span>
-            </div>
-            <div class="today-kcal pending" style="text-align:center;">今日待打卡</div>
-        </div>
-        <div class="member-card" onclick="showMember('梓杉')">
-            <div class="member-name">梓杉</div>
-            <div class="progress-ring-container">
-                <svg class="progress-ring-svg" viewBox="0 0 80 80">
-                    <circle class="progress-ring-circle progress-ring-bg" cx="40" cy="40" r="35"/>
-                    <circle class="progress-ring-circle progress-ring-fg" cx="40" cy="40" r="35" 
-                        stroke="#0A84FF" stroke-dasharray="219.91129999999998" stroke-dashoffset="4.838048600000004"/>
-                </svg>
-                <div class="progress-text">98%</div>
-            </div>
-            <div style="text-align:center;">
-                <span class="streak-badge">0天</span>
-            </div>
-            <div class="today-kcal pending" style="text-align:center;">今日待打卡</div>
-        </div>
-        <div class="member-card" onclick="showMember('之奥')">
-            <div class="member-name">之奥</div>
-            <div class="progress-ring-container">
-                <svg class="progress-ring-svg" viewBox="0 0 80 80">
-                    <circle class="progress-ring-circle progress-ring-bg" cx="40" cy="40" r="35"/>
-                    <circle class="progress-ring-circle progress-ring-fg" cx="40" cy="40" r="35" 
-                        stroke="#30D158" stroke-dasharray="219.91129999999998" stroke-dashoffset="0.0"/>
-                </svg>
-                <div class="progress-text">105%</div>
-            </div>
-            <div style="text-align:center;">
-                <span class="streak-badge">0天</span>
-            </div>
-            <div class="today-kcal pending" style="text-align:center;">今日待打卡</div>
-        </div>
-        <div class="member-card" onclick="showMember('加宝')">
-            <div class="member-name">加宝</div>
-            <div class="progress-ring-container">
-                <svg class="progress-ring-svg" viewBox="0 0 80 80">
-                    <circle class="progress-ring-circle progress-ring-bg" cx="40" cy="40" r="35"/>
-                    <circle class="progress-ring-circle progress-ring-fg" cx="40" cy="40" r="35" 
-                        stroke="#30D158" stroke-dasharray="219.91129999999998" stroke-dashoffset="0.0"/>
-                </svg>
-                <div class="progress-text">170%</div>
-            </div>
-            <div style="text-align:center;">
-                <span class="streak-badge">0天</span>
-            </div>
-            <div class="today-kcal pending" style="text-align:center;">今日待打卡</div>
-        </div>
-        <div class="member-card" onclick="showMember('太宇')">
-            <div class="member-name">太宇</div>
-            <div class="progress-ring-container">
-                <svg class="progress-ring-svg" viewBox="0 0 80 80">
-                    <circle class="progress-ring-circle progress-ring-bg" cx="40" cy="40" r="35"/>
-                    <circle class="progress-ring-circle progress-ring-fg" cx="40" cy="40" r="35" 
-                        stroke="#30D158" stroke-dasharray="219.91129999999998" stroke-dashoffset="0.0"/>
-                </svg>
-                <div class="progress-text">100%</div>
-            </div>
-            <div style="text-align:center;">
-                <span class="streak-badge">0天</span>
-            </div>
-            <div class="today-kcal pending" style="text-align:center;">今日待打卡</div>
-        </div>
-        <div class="member-card" onclick="showMember('晓识')">
-            <div class="member-name">晓识</div>
-            <div class="progress-ring-container">
-                <svg class="progress-ring-svg" viewBox="0 0 80 80">
-                    <circle class="progress-ring-circle progress-ring-bg" cx="40" cy="40" r="35"/>
-                    <circle class="progress-ring-circle progress-ring-fg" cx="40" cy="40" r="35" 
-                        stroke="#30D158" stroke-dasharray="219.91129999999998" stroke-dashoffset="0.0"/>
-                </svg>
-                <div class="progress-text">130%</div>
-            </div>
-            <div style="text-align:center;">
-                <span class="streak-badge">0天</span>
-            </div>
-            <div class="today-kcal pending" style="text-align:center;">今日待打卡</div>
-        </div>
-        <div class="member-card" onclick="showMember('陈雷')">
-            <div class="member-name">陈雷</div>
-            <div class="progress-ring-container">
-                <svg class="progress-ring-svg" viewBox="0 0 80 80">
-                    <circle class="progress-ring-circle progress-ring-bg" cx="40" cy="40" r="35"/>
-                    <circle class="progress-ring-circle progress-ring-fg" cx="40" cy="40" r="35" 
-                        stroke="#0A84FF" stroke-dasharray="219.91129999999998" stroke-dashoffset="30.1278481"/>
-                </svg>
-                <div class="progress-text">86%</div>
-            </div>
-            <div style="text-align:center;">
-                <span class="streak-badge">2天</span>
-            </div>
-            <div class="today-kcal " style="text-align:center;">466 kcal</div>
-        </div>
-        <div class="member-card" onclick="showMember('小涳')">
-            <div class="member-name">小涳</div>
-            <div class="progress-ring-container">
-                <svg class="progress-ring-svg" viewBox="0 0 80 80">
-                    <circle class="progress-ring-circle progress-ring-bg" cx="40" cy="40" r="35"/>
-                    <circle class="progress-ring-circle progress-ring-fg" cx="40" cy="40" r="35" 
-                        stroke="#0A84FF" stroke-dasharray="219.91129999999998" stroke-dashoffset="188.9038067"/>
-                </svg>
-                <div class="progress-text">14%</div>
-            </div>
-            <div style="text-align:center;">
-                <span class="streak-badge">0天</span>
-            </div>
-            <div class="today-kcal pending" style="text-align:center;">今日待打卡</div>
-        </div>
-        <div class="member-card" onclick="showMember('洵心')">
-            <div class="member-name">洵心</div>
-            <div class="progress-ring-container">
-                <svg class="progress-ring-svg" viewBox="0 0 80 80">
-                    <circle class="progress-ring-circle progress-ring-bg" cx="40" cy="40" r="35"/>
-                    <circle class="progress-ring-circle progress-ring-fg" cx="40" cy="40" r="35" 
-                        stroke="#30D158" stroke-dasharray="219.91129999999998" stroke-dashoffset="0.0"/>
-                </svg>
-                <div class="progress-text">101%</div>
-            </div>
-            <div style="text-align:center;">
-                <span class="streak-badge">0天</span>
-            </div>
-            <div class="today-kcal pending" style="text-align:center;">今日待打卡</div>
-        </div>
-        <div class="member-card" onclick="showMember('福远')">
-            <div class="member-name">福远</div>
-            <div class="progress-ring-container">
-                <svg class="progress-ring-svg" viewBox="0 0 80 80">
-                    <circle class="progress-ring-circle progress-ring-bg" cx="40" cy="40" r="35"/>
-                    <circle class="progress-ring-circle progress-ring-fg" cx="40" cy="40" r="35" 
-                        stroke="#30D158" stroke-dasharray="219.91129999999998" stroke-dashoffset="0.0"/>
-                </svg>
-                <div class="progress-text">109%</div>
-            </div>
-            <div style="text-align:center;">
-                <span class="streak-badge">4天</span>
-            </div>
-            <div class="today-kcal " style="text-align:center;">398 kcal</div>
-        </div>
-        <div class="member-card" onclick="showMember('杰诚')">
-            <div class="member-name">杰诚</div>
-            <div class="progress-ring-container">
-                <svg class="progress-ring-svg" viewBox="0 0 80 80">
-                    <circle class="progress-ring-circle progress-ring-bg" cx="40" cy="40" r="35"/>
-                    <circle class="progress-ring-circle progress-ring-fg" cx="40" cy="40" r="35" 
-                        stroke="#30D158" stroke-dasharray="219.91129999999998" stroke-dashoffset="0.0"/>
-                </svg>
-                <div class="progress-text">126%</div>
-            </div>
-            <div style="text-align:center;">
-                <span class="streak-badge">0天</span>
-            </div>
-            <div class="today-kcal pending" style="text-align:center;">今日待打卡</div>
-        </div>
-        <div class="member-card" onclick="showMember('镕清')">
-            <div class="member-name">镕清</div>
-            <div class="progress-ring-container">
-                <svg class="progress-ring-svg" viewBox="0 0 80 80">
-                    <circle class="progress-ring-circle progress-ring-bg" cx="40" cy="40" r="35"/>
-                    <circle class="progress-ring-circle progress-ring-fg" cx="40" cy="40" r="35" 
-                        stroke="#0A84FF" stroke-dasharray="219.91129999999998" stroke-dashoffset="68.172503"/>
-                </svg>
-                <div class="progress-text">69%</div>
-            </div>
-            <div style="text-align:center;">
-                <span class="streak-badge">0天</span>
-            </div>
-            <div class="today-kcal pending" style="text-align:center;">今日待打卡</div>
-        </div>
-        <div class="member-card" onclick="showMember('重楼')">
-            <div class="member-name">重楼</div>
-            <div class="progress-ring-container">
-                <svg class="progress-ring-svg" viewBox="0 0 80 80">
-                    <circle class="progress-ring-circle progress-ring-bg" cx="40" cy="40" r="35"/>
-                    <circle class="progress-ring-circle progress-ring-fg" cx="40" cy="40" r="35" 
-                        stroke="#30D158" stroke-dasharray="219.91129999999998" stroke-dashoffset="0.0"/>
-                </svg>
-                <div class="progress-text">115%</div>
-            </div>
-            <div style="text-align:center;">
-                <span class="streak-badge">0天</span>
-            </div>
-            <div class="today-kcal pending" style="text-align:center;">今日待打卡</div>
-        </div>
-        <div class="member-card" onclick="showMember('Tarry')">
-            <div class="member-name">Tarry</div>
-            <div class="progress-ring-container">
-                <svg class="progress-ring-svg" viewBox="0 0 80 80">
-                    <circle class="progress-ring-circle progress-ring-bg" cx="40" cy="40" r="35"/>
-                    <circle class="progress-ring-circle progress-ring-fg" cx="40" cy="40" r="35" 
-                        stroke="#0A84FF" stroke-dasharray="219.91129999999998" stroke-dashoffset="13.19467800000001"/>
-                </svg>
-                <div class="progress-text">94%</div>
-            </div>
-            <div style="text-align:center;">
-                <span class="streak-badge">0天</span>
-            </div>
-            <div class="today-kcal pending" style="text-align:center;">今日待打卡</div>
-        </div>
-    </div>
+<!-- 顶部导航 -->
+<div class="sbar" style="display:flex;align-items:center;padding:14px 16px 12px;border-bottom:0.5px solid #1C1C1E;">
+  <span style="font-size:11px;color:#FF2D55;font-weight:700;letter-spacing:1.4px;flex:1;">POFENG · 破风前行</span>
+  <div style="display:flex;background:#1C1C1E;border-radius:10px;padding:3px;gap:2px;" id="tabbar"></div>
 </div>
 
-<div class="overlay" id="layer2">
-    <div class="overlay-header">
-        <button class="back-btn" onclick="hideMember()">← 返回团队</button>
-        <div class="overlay-title" id="memberTitle">成员详情</div>
-    </div>
-    <div class="overlay-content" id="memberContent">
-    </div>
+<!-- 日 VIEW -->
+<div id="v-day" style="padding:16px 16px 24px;">
+  <div id="day-header" style="font-size:12px;color:#636366;margin-bottom:12px;"></div>
+  <div id="day-stats" style="margin-bottom:14px;"></div>
+  <div id="day-hero" style="margin-bottom:11px;"></div>
+  <div id="day-podium" style="margin-bottom:11px;"></div>
+  <div id="day-rank4-label" class="sl" style="display:none;">今日打卡排名 · 第4名起</div>
+  <div id="day-rank4" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:16px;"></div>
+  <div id="day-unchecked-card" style="margin-bottom:16px;"></div>
+  <div id="day-darkhorse" style="margin-bottom:16px;"></div>
+  <div class="sl">本月进度 · 点击查看个人详情</div>
+  <div id="day-monthly-grid" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;"></div>
 </div>
 
+<!-- 周 VIEW -->
+<div id="v-week" style="display:none;padding:16px 16px 24px;">
+  <div id="week-header"></div>
+  <div id="week-hero" style="margin-bottom:11px;"></div>
+  <div id="week-awards" style="background:#1C1C1E;border-radius:13px;padding:14px;margin-bottom:11px;"></div>
+  <div style="background:#1C1C1E;border-radius:13px;padding:14px;margin-bottom:11px;">
+    <div class="sl">本周每日团队消耗</div>
+    <div style="position:relative;height:140px;"><canvas id="wk-chart"></canvas></div>
+  </div>
+  <div style="background:#1C1C1E;border-radius:13px;padding:14px;margin-bottom:11px;">
+    <div class="sl">本周成员明细</div>
+    <div id="week-members"></div>
+  </div>
+  <div style="background:#1C1C1E;border-radius:13px;padding:14px;">
+    <div class="sl">历史各周领风者</div>
+    <div id="week-champs"></div>
+  </div>
+</div>
+
+<!-- 月 VIEW -->
+<div id="v-month" style="display:none;padding:16px 16px 24px;">
+  <div id="month-header"></div>
+  <div id="month-overview" style="margin-bottom:11px;"></div>
+  <div id="month-awards" style="background:#1C1C1E;border-radius:13px;padding:14px;margin-bottom:11px;"></div>
+  <div class="sl">全员月度群像 · 点击查看个人详情</div>
+  <div id="month-group" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:11px;"></div>
+  <div id="month-fund"></div>
+</div>
+
+<!-- 规则 VIEW -->
+<div id="v-rules" style="display:none;padding:16px 16px 24px;">
+  <div style="font-size:20px;font-weight:800;margin-bottom:16px;">项目总规则</div>
+
+  <div style="background:#1C1C1E;border-radius:13px;padding:14px;margin-bottom:10px;">
+    <div style="font-size:10px;color:#FF2D55;font-weight:700;letter-spacing:1px;margin-bottom:10px;text-transform:uppercase;">项目简介</div>
+    <div style="font-size:13px;color:#d4d4d4;line-height:1.75;">破风前行是以2027年3月体测为目标的团队健身计划，通过钉钉表格记录打卡、AI每日自动生成报告。每月达标保本金，未达标500元入池。</div>
+    <div style="display:flex;gap:8px;margin-top:12px;">
+      <div style="background:#2C2C2E;border-radius:9px;padding:9px 12px;flex:1;text-align:center;"><div style="font-size:10px;color:#636366;margin-bottom:3px;">团队人数</div><div style="font-size:15px;font-weight:700;color:#0A84FF;">16人</div></div>
+      <div style="background:#2C2C2E;border-radius:9px;padding:9px 12px;flex:1;text-align:center;"><div style="font-size:10px;color:#636366;margin-bottom:3px;">目标日期</div><div style="font-size:15px;font-weight:700;color:#FF9F0A;">2027.03</div></div>
+      <div id="r-countdown" style="background:#2C2C2E;border-radius:9px;padding:9px 12px;flex:1;text-align:center;"></div>
+    </div>
+  </div>
+
+  <!-- 基础目标 -->
+  <div style="background:#1C1C1E;border-radius:13px;padding:14px;margin-bottom:10px;">
+    <div style="font-size:10px;color:#30D158;font-weight:700;letter-spacing:1px;margin-bottom:12px;text-transform:uppercase;">月度基础目标</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+      <div style="background:#2C2C2E;border-radius:11px;padding:14px;text-align:center;border:0.5px solid #0A84FF25;"><div style="font-size:11px;color:#636366;margin-bottom:5px;">男性基础目标</div><div style="font-size:28px;font-weight:800;color:#0A84FF;">7,000</div><div style="font-size:11px;color:#48484A;margin-top:3px;">kcal / 月</div></div>
+      <div style="background:#2C2C2E;border-radius:11px;padding:14px;text-align:center;border:0.5px solid #FF2D5525;"><div style="font-size:11px;color:#636366;margin-bottom:5px;">女性基础目标</div><div style="font-size:28px;font-weight:800;color:#FF2D55;">4,800</div><div style="font-size:11px;color:#48484A;margin-top:3px;">kcal / 月</div></div>
+    </div>
+    <div style="font-size:12px;color:#636366;line-height:1.65;">病假豁免公式：基础目标 × (自然周数 − 病假周数) ÷ 自然周数</div>
+  </div>
+
+  <!-- 本月各人实际目标（JS 动态渲染） -->
+  <div style="background:#1C1C1E;border-radius:13px;padding:14px;margin-bottom:10px;">
+    <div id="r-targets-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <div style="font-size:10px;color:#FF9F0A;font-weight:700;letter-spacing:1px;text-transform:uppercase;">本月各人实际目标</div>
+      <div id="r-targets-month" style="font-size:10px;color:#636366;"></div>
+    </div>
+    <div id="r-targets" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;"></div>
+    <div id="r-targets-note" style="margin-top:10px;font-size:11px;color:#636366;"></div>
+  </div>
+
+  <!-- 奖项规则 -->
+  <div style="background:#1C1C1E;border-radius:13px;padding:14px;margin-bottom:10px;">
+    <div style="font-size:10px;color:#FF9F0A;font-weight:700;letter-spacing:1px;margin-bottom:12px;text-transform:uppercase;">奖项规则速查</div>
+    <div style="display:flex;flex-direction:column;gap:9px;font-size:13px;">
+      <div style="display:flex;gap:10px;align-items:flex-start;"><span style="flex-shrink:0;width:20px;">🏆</span><div><span style="font-weight:600;color:#FF9F0A;">月度MVP</span><span style="color:#636366;font-size:12px;margin-left:6px;">月度消耗最高，必有一人</span></div></div>
+      <div style="display:flex;gap:10px;align-items:flex-start;"><span style="flex-shrink:0;width:20px;">🚀</span><div><span style="font-weight:600;color:#0A84FF;">月度进步奖</span><span style="color:#636366;font-size:12px;margin-left:6px;">环比增幅≥30%，上月有记录</span></div></div>
+      <div style="display:flex;gap:10px;align-items:flex-start;"><span style="flex-shrink:0;width:20px;">🚩</span><div><span style="font-weight:600;color:#30D158;">月度全勤奖</span><span style="color:#636366;font-size:12px;margin-left:6px;">每自然周有打卡 + 总次数≥12</span></div></div>
+      <div style="display:flex;gap:10px;align-items:flex-start;"><span style="flex-shrink:0;width:20px;">🛡️</span><div><span style="font-weight:600;color:#8E8E93;">钢铁意志</span><span style="color:#636366;font-size:12px;margin-left:6px;">差旅日期内仍有打卡记录</span></div></div>
+      <div style="display:flex;gap:10px;align-items:flex-start;"><span style="flex-shrink:0;width:20px;">⚡</span><div><span style="font-weight:600;color:#0A84FF;">今日黑马</span><span style="color:#636366;font-size:12px;margin-left:6px;">比自己7日均值增幅最高</span></div></div>
+      <div style="display:flex;gap:10px;align-items:flex-start;"><span style="flex-shrink:0;width:20px;">🚀</span><div><span style="font-weight:600;color:#0A84FF;">破风新星（周）</span><span style="color:#636366;font-size:12px;margin-left:6px;">周环比增幅≥20%</span></div></div>
+      <div style="display:flex;gap:10px;align-items:flex-start;"><span style="flex-shrink:0;width:20px;">⚡</span><div><span style="font-weight:600;color:#FF9F0A;">逆风翻盘（周）</span><span style="color:#636366;font-size:12px;margin-left:6px;">本周打卡次数净提升最多</span></div></div>
+      <div style="display:flex;gap:10px;align-items:flex-start;"><span style="flex-shrink:0;width:20px;">🚩</span><div><span style="font-weight:600;color:#FF2D55;">言出必行（周）</span><span style="color:#636366;font-size:12px;margin-left:6px;">连续≥3周每周≥5次打卡</span></div></div>
+    </div>
+  </div>
+
+  <!-- 基金规则 -->
+  <div style="background:#1C1C1E;border-radius:13px;padding:14px;border:0.5px solid #FF9F0A30;">
+    <div style="font-size:10px;color:#FF9F0A;font-weight:700;letter-spacing:1px;margin-bottom:10px;text-transform:uppercase;">破风基金规则</div>
+    <div style="font-size:13px;color:#d4d4d4;line-height:1.75;">每人每月缴纳 <span style="color:#FF9F0A;font-weight:700;">¥500</span>。月底达成目标 → 保留500元；未达标 → 500元进入破风基金池。病假成员经雷加确认后豁免当月考核。基金池在项目结束时统一分配。</div>
+  </div>
+</div>
+
+<!-- 个人详情 VIEW（Layer 2） -->
+<div id="v-detail" style="display:none;padding:16px 16px 24px;">
+  <button onclick="backFromDetail()" style="background:none;border:none;color:#0A84FF;font-size:15px;cursor:pointer;padding:0 0 16px;display:flex;align-items:center;gap:4px;font-family:-apple-system,sans-serif;-webkit-tap-highlight-color:transparent;">‹ 返回团队</button>
+  <div id="detail-content"></div>
+</div>
+
+</div><!-- #app -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+
+<!-- ═══════════════════════════════════════════════════════
+     POFENG_DATA_START
+     ↓ Q 每天只替换这一块，HTML/CSS/JS 渲染逻辑不动 ↓
+═══════════════════════════════════════════════════════ -->
+<!-- POFENG_DATA_START -->
 <script>
-const POFENG_DATA = {"generated_at": "2026-04-29T21:52:33", "project_end_date": "2027-03-31", "current_month": "2026-04", "today_has_data": false, "awards": {"今日破风榜": [{"rank": 1, "name": "陈雷", "value": "466 kcal"}, {"rank": 2, "name": "福远", "value": "398 kcal"}], "今日黑马": {"name": "陈雷", "value": "+232%"}, "今日金句": {"name": "陈雷", "value": "破风前行，遇见更好的自己"}, "领风者": {"name": "陈雷", "value": "466 kcal"}, "言出必行": {"names": ["之奥", "太宇", "晓识"], "value": "连续4周"}}, "members": [{"name": "雷加", "gender": "M", "flag": "千里之行始于足下！", "monthly_targets": {"2026-04": {"target": 7000, "achieved": 7117}}, "current_streak": 0, "today_kcal": null, "records": [{"date": "2026-04-01", "kcal": 386, "type": "HIIT", "duration": 35}, {"date": "2026-04-02", "kcal": 82, "type": "步行", "duration": 29}, {"date": "2026-04-04", "kcal": 1486, "type": "骑行", "duration": 160}, {"date": "2026-04-06", "kcal": 531, "type": "力量训练", "duration": 87}, {"date": "2026-04-13", "kcal": 253, "type": "HIIT", "duration": 47}, {"date": "2026-04-15", "kcal": 268, "type": "力量训练", "duration": 85}, {"date": "2026-04-17", "kcal": 128, "type": "步行", "duration": 35}, {"date": "2026-04-18", "kcal": 423, "type": "HIIT", "duration": 37}, {"date": "2026-04-19", "kcal": 1180, "type": "骑行/力量训练", "duration": 143}, {"date": "2026-04-22", "kcal": 297, "type": "力量训练", "duration": 65}, {"date": "2026-04-24", "kcal": 322, "type": "步行/HIIT", "duration": 43}, {"date": "2026-04-25", "kcal": 492, "type": "步行/篮球", "duration": 68}, {"date": "2026-04-26", "kcal": 1269, "type": "骑行", "duration": 173}]}, {"name": "婉思", "gender": "F", "flag": "行动，是最好的风水！目标50KG", "monthly_targets": {"2026-04": {"target": 4800, "achieved": 5925}}, "current_streak": 0, "today_kcal": null, "records": [{"date": "2026-04-01", "kcal": 163, "type": "综合训练", "duration": 21}, {"date": "2026-04-02", "kcal": 257, "type": "其他", "duration": 30}, {"date": "2026-04-03", "kcal": 191, "type": "步行", "duration": 33}, {"date": "2026-04-04", "kcal": 175, "type": "骑行", "duration": 44}, {"date": "2026-04-06", "kcal": 548, "type": "骑行", "duration": 75}, {"date": "2026-04-07", "kcal": 437, "type": "骑行", "duration": 65}, {"date": "2026-04-08", "kcal": 202, "type": "步行", "duration": 39}, {"date": "2026-04-12", "kcal": 523, "type": "骑行/HIIT", "duration": 55}, {"date": "2026-04-15", "kcal": 475, "type": "步行/骑行", "duration": 70}, {"date": "2026-04-16", "kcal": 251, "type": "骑行", "duration": 34}, {"date": "2026-04-17", "kcal": 245, "type": "骑行", "duration": 31}, {"date": "2026-04-18", "kcal": 399, "type": "骑行", "duration": 50}, {"date": "2026-04-19", "kcal": 430, "type": "骑行", "duration": 60}, {"date": "2026-04-20", "kcal": 246, "type": "骑行", "duration": 32}, {"date": "2026-04-21", "kcal": 381, "type": "爬坡", "duration": 45}, {"date": "2026-04-23", "kcal": 251, "type": "骑行", "duration": 33}, {"date": "2026-04-24", "kcal": 246, "type": "骑行", "duration": 30}, {"date": "2026-04-26", "kcal": 505, "type": "骑行", "duration": 60}]}, {"name": "伊竹", "gender": "F", "flag": "有千玺陪跑 目标能早早完成", "monthly_targets": {"2026-04": {"target": 960, "achieved": 1519}}, "current_streak": 3, "today_kcal": null, "records": [{"date": "2026-04-02", "kcal": 200, "type": "划船机", "duration": 25}, {"date": "2026-04-04", "kcal": 271, "type": "步行", "duration": 112}, {"date": "2026-04-05", "kcal": 182, "type": "骑行", "duration": 61}, {"date": "2026-04-06", "kcal": 139, "type": "划船机", "duration": 25}, {"date": "2026-04-07", "kcal": 192, "type": "划船机", "duration": 30}, {"date": "2026-04-10", "kcal": 223, "type": "步行", "duration": 53}, {"date": "2026-04-13", "kcal": 155, "type": "步行", "duration": 38}, {"date": "2026-04-14", "kcal": 157, "type": "步行", "duration": 40}]}, {"name": "梓杉", "gender": "M", "flag": "75公斤必须是我的上限！！", "monthly_targets": {"2026-04": {"target": 7000, "achieved": 6846}}, "current_streak": 0, "today_kcal": null, "records": [{"date": "2026-04-01", "kcal": 304, "type": "跑步", "duration": 35}, {"date": "2026-04-04", "kcal": 776, "type": "骑行", "duration": 60}, {"date": "2026-04-06", "kcal": 659, "type": "骑行", "duration": 57}, {"date": "2026-04-08", "kcal": 304, "type": "HIIT", "duration": 32}, {"date": "2026-04-11", "kcal": 202, "type": "HIIT", "duration": 20}, {"date": "2026-04-13", "kcal": 305, "type": "HIIT", "duration": 28}, {"date": "2026-04-16", "kcal": 307, "type": "爬坡", "duration": 43}, {"date": "2026-04-18", "kcal": 771, "type": "骑行", "duration": 73}, {"date": "2026-04-19", "kcal": 725, "type": "骑行", "duration": 65}, {"date": "2026-04-20", "kcal": 151, "type": "步行", "duration": 30}, {"date": "2026-04-22", "kcal": 324, "type": "HIIT", "duration": 30}, {"date": "2026-04-24", "kcal": 301, "type": "力量训练", "duration": 30}, {"date": "2026-04-25", "kcal": 768, "type": "骑行", "duration": 83}, {"date": "2026-04-26", "kcal": 949, "type": "骑行/骑行", "duration": 86}]}, {"name": "之奥", "gender": "M", "flag": "挑战自我，突破极限", "monthly_targets": {"2026-04": {"target": 7000, "achieved": 7366}}, "current_streak": 0, "today_kcal": null, "records": [{"date": "2026-04-01", "kcal": 134, "type": "综合训练", "duration": 26}, {"date": "2026-04-02", "kcal": 109, "type": "HIIT/力量训练", "duration": 14}, {"date": "2026-04-03", "kcal": 154, "type": "综合训练", "duration": 34}, {"date": "2026-04-04", "kcal": 129, "type": "HIIT", "duration": 28}, {"date": "2026-04-05", "kcal": 315, "type": "步行", "duration": 100}, {"date": "2026-04-06", "kcal": 592, "type": "综合训练", "duration": 126}, {"date": "2026-04-07", "kcal": 186, "type": "综合训练", "duration": 25}, {"date": "2026-04-08", "kcal": 895, "type": "步行/足球", "duration": 87}, {"date": "2026-04-11", "kcal": 485, "type": "游泳/步行", "duration": 104}, {"date": "2026-04-12", "kcal": 304, "type": "游泳", "duration": 60}, {"date": "2026-04-14", "kcal": 321, "type": "步行/步行", "duration": 60}, {"date": "2026-04-15", "kcal": 578, "type": "步行/步行", "duration": 96}, {"date": "2026-04-17", "kcal": 411, "type": "步行", "duration": 67}, {"date": "2026-04-18", "kcal": 881, "type": "游泳/骑行/步行", "duration": 190}, {"date": "2026-04-19", "kcal": 289, "type": "步行", "duration": 62}, {"date": "2026-04-20", "kcal": 219, "type": "步行", "duration": 48}, {"date": "2026-04-23", "kcal": 187, "type": "步行", "duration": 31}, {"date": "2026-04-24", "kcal": 202, "type": "跑步", "duration": 30}, {"date": "2026-04-25", "kcal": 553, "type": "篮球", "duration": 46}, {"date": "2026-04-26", "kcal": 422, "type": "游泳", "duration": 83}]}, {"name": "加宝", "gender": "M", "flag": "我在取悦自己，顺便给你看看", "monthly_targets": {"2026-04": {"target": 7000, "achieved": 11916}}, "current_streak": 0, "today_kcal": null, "records": [{"date": "2026-04-01", "kcal": 394, "type": "跑步", "duration": 39}, {"date": "2026-04-04", "kcal": 1352, "type": "骑行", "duration": 160}, {"date": "2026-04-05", "kcal": 677, "type": "力量训练", "duration": 100}, {"date": "2026-04-06", "kcal": 777, "type": "力量训练", "duration": 0}, {"date": "2026-04-08", "kcal": 603, "type": "力量训练", "duration": 60}, {"date": "2026-04-09", "kcal": 402, "type": "跑步", "duration": 40}, {"date": "2026-04-11", "kcal": 525, "type": "力量训练", "duration": 50}, {"date": "2026-04-12", "kcal": 559, "type": "力量训练", "duration": 50}, {"date": "2026-04-15", "kcal": 712, "type": "力量训练", "duration": 90}, {"date": "2026-04-17", "kcal": 660, "type": "力量训练", "duration": 70}, {"date": "2026-04-18", "kcal": 899, "type": "综合训练", "duration": 90}, {"date": "2026-04-19", "kcal": 788, "type": "力量训练", "duration": 80}, {"date": "2026-04-26", "kcal": 3568, "type": "力量训练/综合训练/骑行/力量训练/力量训练", "duration": 370}]}, {"name": "太宇", "gender": "M", "flag": "健康生活，从运动开始", "monthly_targets": {"2026-04": {"target": 7000, "achieved": 7034}}, "current_streak": 0, "today_kcal": null, "records": [{"date": "2026-04-01", "kcal": 461, "type": "爬坡", "duration": 40}, {"date": "2026-04-02", "kcal": 365, "type": "步行", "duration": 42}, {"date": "2026-04-03", "kcal": 388, "type": "爬坡", "duration": 50}, {"date": "2026-04-04", "kcal": 386, "type": "步行", "duration": 40}, {"date": "2026-04-05", "kcal": 431, "type": "步行", "duration": 40}, {"date": "2026-04-07", "kcal": 364, "type": "爬坡", "duration": 40}, {"date": "2026-04-08", "kcal": 441, "type": "跑步", "duration": 39}, {"date": "2026-04-09", "kcal": 400, "type": "爬坡", "duration": 40}, {"date": "2026-04-10", "kcal": 329, "type": "爬坡", "duration": 40}, {"date": "2026-04-11", "kcal": 343, "type": "爬坡", "duration": 40}, {"date": "2026-04-13", "kcal": 552, "type": "爬坡/步行", "duration": 75}, {"date": "2026-04-14", "kcal": 627, "type": "爬坡/步行", "duration": 90}, {"date": "2026-04-15", "kcal": 340, "type": "爬坡", "duration": 30}, {"date": "2026-04-17", "kcal": 366, "type": "爬坡", "duration": 35}, {"date": "2026-04-18", "kcal": 161, "type": "步行", "duration": 35}, {"date": "2026-04-19", "kcal": 809, "type": "步行/步行", "duration": 148}, {"date": "2026-04-20", "kcal": 271, "type": "步行", "duration": 50}]}, {"name": "晓识", "gender": "M", "flag": "坚持运动", "monthly_targets": {"2026-04": {"target": 7000, "achieved": 9118}}, "current_streak": 0, "today_kcal": null, "records": [{"date": "2026-04-01", "kcal": 334, "type": "步行", "duration": 46}, {"date": "2026-04-02", "kcal": 359, "type": "力量训练/步行", "duration": 79}, {"date": "2026-04-03", "kcal": 330, "type": "步行", "duration": 40}, {"date": "2026-04-04", "kcal": 195, "type": "力量训练", "duration": 42}, {"date": "2026-04-05", "kcal": 546, "type": "力量训练/羽毛球", "duration": 90}, {"date": "2026-04-06", "kcal": 285, "type": "步行", "duration": 60}, {"date": "2026-04-07", "kcal": 179, "type": "步行", "duration": 40}, {"date": "2026-04-08", "kcal": 373, "type": "步行", "duration": 50}, {"date": "2026-04-09", "kcal": 209, "type": "力量训练", "duration": 40}, {"date": "2026-04-10", "kcal": 274, "type": "步行", "duration": 75}, {"date": "2026-04-11", "kcal": 402, "type": "步行/力量训练", "duration": 95}, {"date": "2026-04-12", "kcal": 176, "type": "力量训练", "duration": 43}, {"date": "2026-04-13", "kcal": 350, "type": "步行", "duration": 50}, {"date": "2026-04-14", "kcal": 469, "type": "力量训练/步行/步行", "duration": 108}, {"date": "2026-04-15", "kcal": 338, "type": "步行", "duration": 55}, {"date": "2026-04-16", "kcal": 375, "type": "力量训练/步行", "duration": 84}, {"date": "2026-04-17", "kcal": 389, "type": "步行", "duration": 53}, {"date": "2026-04-18", "kcal": 505, "type": "步行/步行/力量训练", "duration": 126}, {"date": "2026-04-19", "kcal": 509, "type": "步行/步行", "duration": 115}, {"date": "2026-04-20", "kcal": 334, "type": "步行/力量训练", "duration": 80}, {"date": "2026-04-21", "kcal": 412, "type": "步行", "duration": 55}, {"date": "2026-04-22", "kcal": 447, "type": "步行", "duration": 50}, {"date": "2026-04-23", "kcal": 263, "type": "跑步", "duration": 35}, {"date": "2026-04-24", "kcal": 307, "type": "跑步", "duration": 30}, {"date": "2026-04-25", "kcal": 194, "type": "力量训练", "duration": 50}, {"date": "2026-04-26", "kcal": 564, "type": "综合训练/步行/骑行", "duration": 130}]}, {"name": "陈雷", "gender": "M", "flag": "破风前行，遇见更好的自己", "monthly_targets": {"2026-04": {"target": 7000, "achieved": 6040}}, "current_streak": 2, "today_kcal": 466, "records": [{"date": "2026-04-01", "kcal": 309, "type": "骑行", "duration": 38}, {"date": "2026-04-02", "kcal": 461, "type": "骑行/骑行", "duration": 0}, {"date": "2026-04-04", "kcal": 666, "type": "骑行", "duration": 67}, {"date": "2026-04-08", "kcal": 454, "type": "骑行/骑行", "duration": 47}, {"date": "2026-04-10", "kcal": 430, "type": "骑行", "duration": 49}, {"date": "2026-04-13", "kcal": 217, "type": "骑行", "duration": 25}, {"date": "2026-04-15", "kcal": 201, "type": "骑行", "duration": 22}, {"date": "2026-04-16", "kcal": 223, "type": "骑行", "duration": 25}, {"date": "2026-04-17", "kcal": 192, "type": "骑行", "duration": 24}, {"date": "2026-04-18", "kcal": 1001, "type": "骑行", "duration": 93}, {"date": "2026-04-20", "kcal": 436, "type": "骑行/骑行", "duration": 49}, {"date": "2026-04-24", "kcal": 284, "type": "力量训练", "duration": 80}, {"date": "2026-04-26", "kcal": 700, "type": "力量训练", "duration": 192}, {"date": "2026-04-27", "kcal": 466, "type": "骑行/骑行", "duration": 52}]}, {"name": "小涳", "gender": "M", "flag": "每天进步一点点", "monthly_targets": {"2026-04": {"target": 7000, "achieved": 988}}, "current_streak": 0, "today_kcal": null, "records": [{"date": "2026-04-07", "kcal": 105, "type": "足球", "duration": 25}, {"date": "2026-04-08", "kcal": 883, "type": "足球", "duration": 61}]}, {"name": "洵心", "gender": "M", "flag": "享受运动，快乐生活", "monthly_targets": {"2026-04": {"target": 7000, "achieved": 7080}}, "current_streak": 0, "today_kcal": null, "records": [{"date": "2026-04-02", "kcal": 245, "type": "步行", "duration": 31}, {"date": "2026-04-04", "kcal": 473, "type": "骑行/骑行", "duration": 46}, {"date": "2026-04-05", "kcal": 403, "type": "骑行/骑行", "duration": 50}, {"date": "2026-04-06", "kcal": 900, "type": "步行/骑行/骑行", "duration": 95}, {"date": "2026-04-07", "kcal": 612, "type": "骑行/骑行", "duration": 75}, {"date": "2026-04-08", "kcal": 526, "type": "步行/足球", "duration": 70}, {"date": "2026-04-11", "kcal": 819, "type": "步行/步行", "duration": 81}, {"date": "2026-04-12", "kcal": 504, "type": "骑行", "duration": 50}, {"date": "2026-04-14", "kcal": 238, "type": "步行/步行", "duration": 46}, {"date": "2026-04-15", "kcal": 704, "type": "骑行/骑行/骑行", "duration": 81}, {"date": "2026-04-19", "kcal": 429, "type": "步行", "duration": 56}, {"date": "2026-04-20", "kcal": 476, "type": "步行", "duration": 46}, {"date": "2026-04-21", "kcal": 384, "type": "步行", "duration": 37}, {"date": "2026-04-26", "kcal": 367, "type": "骑行/骑行", "duration": 41}]}, {"name": "福远", "gender": "M", "flag": "目标75KG", "monthly_targets": {"2026-04": {"target": 7000, "achieved": 7616}}, "current_streak": 4, "today_kcal": 398, "records": [{"date": "2026-04-03", "kcal": 313, "type": "综合训练", "duration": 30}, {"date": "2026-04-04", "kcal": 318, "type": "骑行", "duration": 44}, {"date": "2026-04-05", "kcal": 343, "type": "综合训练", "duration": 30}, {"date": "2026-04-07", "kcal": 444, "type": "综合训练", "duration": 40}, {"date": "2026-04-08", "kcal": 482, "type": "综合训练", "duration": 46}, {"date": "2026-04-09", "kcal": 429, "type": "综合训练", "duration": 40}, {"date": "2026-04-10", "kcal": 272, "type": "跑步", "duration": 30}, {"date": "2026-04-11", "kcal": 376, "type": "跑步", "duration": 30}, {"date": "2026-04-13", "kcal": 302, "type": "综合训练", "duration": 31}, {"date": "2026-04-15", "kcal": 198, "type": "步行", "duration": 36}, {"date": "2026-04-16", "kcal": 407, "type": "综合训练", "duration": 36}, {"date": "2026-04-19", "kcal": 1030, "type": "综合训练/跑步", "duration": 85}, {"date": "2026-04-20", "kcal": 405, "type": "综合训练", "duration": 38}, {"date": "2026-04-21", "kcal": 300, "type": "综合训练", "duration": 30}, {"date": "2026-04-22", "kcal": 378, "type": "综合训练", "duration": 33}, {"date": "2026-04-24", "kcal": 395, "type": "综合训练", "duration": 36}, {"date": "2026-04-25", "kcal": 522, "type": "步行/跑步", "duration": 69}, {"date": "2026-04-26", "kcal": 304, "type": "步行", "duration": 41}, {"date": "2026-04-27", "kcal": 398, "type": "综合训练", "duration": 40}]}, {"name": "杰诚", "gender": "M", "flag": "唤醒自己的潜能", "monthly_targets": {"2026-04": {"target": 7000, "achieved": 8848}}, "current_streak": 0, "today_kcal": null, "records": [{"date": "2026-04-01", "kcal": 444, "type": "力量训练", "duration": 53}, {"date": "2026-04-02", "kcal": 365, "type": "椭圆机", "duration": 32}, {"date": "2026-04-06", "kcal": 880, "type": "羽毛球", "duration": 0}, {"date": "2026-04-11", "kcal": 1170, "type": "篮球", "duration": 120}, {"date": "2026-04-17", "kcal": 959, "type": "爬坡/步行", "duration": 112}, {"date": "2026-04-18", "kcal": 1072, "type": "篮球", "duration": 110}, {"date": "2026-04-19", "kcal": 528, "type": "力量训练/室内骑行", "duration": 55}, {"date": "2026-04-20", "kcal": 543, "type": "力量训练/室内骑行", "duration": 42}, {"date": "2026-04-22", "kcal": 157, "type": "力量训练", "duration": 15}, {"date": "2026-04-25", "kcal": 2328, "type": "其他/篮球", "duration": 186}, {"date": "2026-04-26", "kcal": 402, "type": "室内骑行", "duration": 34}]}, {"name": "镕清", "gender": "M", "flag": "保持热爱，奔赴山海", "monthly_targets": {"2026-04": {"target": 7000, "achieved": 4830}}, "current_streak": 0, "today_kcal": null, "records": [{"date": "2026-04-01", "kcal": 228, "type": "步行", "duration": 0}, {"date": "2026-04-02", "kcal": 257, "type": "跑步/跑步", "duration": 27}, {"date": "2026-04-04", "kcal": 411, "type": "跑步", "duration": 45}, {"date": "2026-04-05", "kcal": 245, "type": "步行", "duration": 44}, {"date": "2026-04-08", "kcal": 426, "type": "跑步", "duration": 38}, {"date": "2026-04-11", "kcal": 339, "type": "步行", "duration": 90}, {"date": "2026-04-12", "kcal": 288, "type": "步行", "duration": 90}, {"date": "2026-04-15", "kcal": 484, "type": "跑步", "duration": 37}, {"date": "2026-04-16", "kcal": 121, "type": "步行", "duration": 29}, {"date": "2026-04-17", "kcal": 445, "type": "跑步", "duration": 35}, {"date": "2026-04-18", "kcal": 336, "type": "篮球", "duration": 39}, {"date": "2026-04-19", "kcal": 142, "type": "步行", "duration": 36}, {"date": "2026-04-25", "kcal": 585, "type": "步行", "duration": 136}, {"date": "2026-04-26", "kcal": 523, "type": "步行", "duration": 77}]}, {"name": "重楼", "gender": "M", "flag": "健康的活到去火星那一天", "monthly_targets": {"2026-04": {"target": 7000, "achieved": 8033}}, "current_streak": 0, "today_kcal": null, "records": [{"date": "2026-04-01", "kcal": 584, "type": "综合训练", "duration": 114}, {"date": "2026-04-02", "kcal": 420, "type": "跑步", "duration": 52}, {"date": "2026-04-04", "kcal": 760, "type": "综合训练/综合训练", "duration": 192}, {"date": "2026-04-05", "kcal": 751, "type": "综合训练/跑步", "duration": 105}, {"date": "2026-04-06", "kcal": 701, "type": "综合训练/综合训练", "duration": 161}, {"date": "2026-04-07", "kcal": 331, "type": "步行", "duration": 50}, {"date": "2026-04-08", "kcal": 250, "type": "爬坡", "duration": 50}, {"date": "2026-04-11", "kcal": 468, "type": "爬坡", "duration": 56}, {"date": "2026-04-12", "kcal": 538, "type": "椭圆机/跑步", "duration": 99}, {"date": "2026-04-13", "kcal": 234, "type": "跑步", "duration": 37}, {"date": "2026-04-14", "kcal": 337, "type": "综合训练", "duration": 50}, {"date": "2026-04-17", "kcal": 410, "type": "爬坡", "duration": 54}, {"date": "2026-04-19", "kcal": 779, "type": "步行/篮球/力量训练", "duration": 163}, {"date": "2026-04-20", "kcal": 604, "type": "其他", "duration": 106}, {"date": "2026-04-22", "kcal": 291, "type": "跑步", "duration": 46}, {"date": "2026-04-25", "kcal": 575, "type": "登山/力量训练", "duration": 129}]}, {"name": "Tarry", "gender": "M", "flag": "运动不需要借口", "monthly_targets": {"2026-04": {"target": 7000, "achieved": 6579}}, "current_streak": 0, "today_kcal": null, "records": [{"date": "2026-04-01", "kcal": 457, "type": "跑步", "duration": 37}, {"date": "2026-04-04", "kcal": 605, "type": "跑步", "duration": 50}, {"date": "2026-04-05", "kcal": 429, "type": "跑步", "duration": 33}, {"date": "2026-04-09", "kcal": 495, "type": "跑步", "duration": 41}, {"date": "2026-04-12", "kcal": 429, "type": "爬坡", "duration": 40}, {"date": "2026-04-14", "kcal": 210, "type": "步行", "duration": 33}, {"date": "2026-04-16", "kcal": 151, "type": "划船机", "duration": 26}, {"date": "2026-04-18", "kcal": 562, "type": "跑步", "duration": 46}, {"date": "2026-04-19", "kcal": 490, "type": "跑步", "duration": 42}, {"date": "2026-04-20", "kcal": 623, "type": "划船机/步行", "duration": 79}, {"date": "2026-04-21", "kcal": 478, "type": "跑步", "duration": 36}, {"date": "2026-04-23", "kcal": 478, "type": "跑步", "duration": 40}, {"date": "2026-04-25", "kcal": 593, "type": "跑步", "duration": 46}, {"date": "2026-04-26", "kcal": 579, "type": "跑步", "duration": 49}]}]};
-const MEMBERS_FULL = [{"name": "雷加", "gender": "M", "flag": "千里之行始于足下！", "monthly_targets": {"2026-04": {"target": 7000, "achieved": 7117}}, "current_streak": 0, "today_kcal": null, "total_kcal": 7117, "total_count": 13, "total_duration_hours": 16, "records": [{"date": "2026-04-01", "kcal": 386, "type": "HIIT", "duration": 35}, {"date": "2026-04-02", "kcal": 82, "type": "步行", "duration": 29}, {"date": "2026-04-04", "kcal": 1486, "type": "骑行", "duration": 160}, {"date": "2026-04-06", "kcal": 531, "type": "力量训练", "duration": 87}, {"date": "2026-04-13", "kcal": 253, "type": "HIIT", "duration": 47}, {"date": "2026-04-15", "kcal": 268, "type": "力量训练", "duration": 85}, {"date": "2026-04-17", "kcal": 128, "type": "步行", "duration": 35}, {"date": "2026-04-18", "kcal": 423, "type": "HIIT", "duration": 37}, {"date": "2026-04-19", "kcal": 1180, "type": "骑行/力量训练", "duration": 143}, {"date": "2026-04-22", "kcal": 297, "type": "力量训练", "duration": 65}, {"date": "2026-04-24", "kcal": 322, "type": "步行/HIIT", "duration": 43}, {"date": "2026-04-25", "kcal": 492, "type": "步行/篮球", "duration": 68}, {"date": "2026-04-26", "kcal": 1269, "type": "骑行", "duration": 173}]}, {"name": "婉思", "gender": "F", "flag": "行动，是最好的风水！目标50KG", "monthly_targets": {"2026-04": {"target": 4800, "achieved": 5925}}, "current_streak": 0, "today_kcal": null, "total_kcal": 5925, "total_count": 18, "total_duration_hours": 13, "records": [{"date": "2026-04-01", "kcal": 163, "type": "综合训练", "duration": 21}, {"date": "2026-04-02", "kcal": 257, "type": "其他", "duration": 30}, {"date": "2026-04-03", "kcal": 191, "type": "步行", "duration": 33}, {"date": "2026-04-04", "kcal": 175, "type": "骑行", "duration": 44}, {"date": "2026-04-06", "kcal": 548, "type": "骑行", "duration": 75}, {"date": "2026-04-07", "kcal": 437, "type": "骑行", "duration": 65}, {"date": "2026-04-08", "kcal": 202, "type": "步行", "duration": 39}, {"date": "2026-04-12", "kcal": 523, "type": "骑行/HIIT", "duration": 55}, {"date": "2026-04-15", "kcal": 475, "type": "步行/骑行", "duration": 70}, {"date": "2026-04-16", "kcal": 251, "type": "骑行", "duration": 34}, {"date": "2026-04-17", "kcal": 245, "type": "骑行", "duration": 31}, {"date": "2026-04-18", "kcal": 399, "type": "骑行", "duration": 50}, {"date": "2026-04-19", "kcal": 430, "type": "骑行", "duration": 60}, {"date": "2026-04-20", "kcal": 246, "type": "骑行", "duration": 32}, {"date": "2026-04-21", "kcal": 381, "type": "爬坡", "duration": 45}, {"date": "2026-04-23", "kcal": 251, "type": "骑行", "duration": 33}, {"date": "2026-04-24", "kcal": 246, "type": "骑行", "duration": 30}, {"date": "2026-04-26", "kcal": 505, "type": "骑行", "duration": 60}]}, {"name": "伊竹", "gender": "F", "flag": "有千玺陪跑 目标能早早完成", "monthly_targets": {"2026-04": {"target": 960, "achieved": 1519}}, "current_streak": 3, "today_kcal": null, "total_kcal": 1519, "total_count": 8, "total_duration_hours": 6, "records": [{"date": "2026-04-02", "kcal": 200, "type": "划船机", "duration": 25}, {"date": "2026-04-04", "kcal": 271, "type": "步行", "duration": 112}, {"date": "2026-04-05", "kcal": 182, "type": "骑行", "duration": 61}, {"date": "2026-04-06", "kcal": 139, "type": "划船机", "duration": 25}, {"date": "2026-04-07", "kcal": 192, "type": "划船机", "duration": 30}, {"date": "2026-04-10", "kcal": 223, "type": "步行", "duration": 53}, {"date": "2026-04-13", "kcal": 155, "type": "步行", "duration": 38}, {"date": "2026-04-14", "kcal": 157, "type": "步行", "duration": 40}]}, {"name": "梓杉", "gender": "M", "flag": "75公斤必须是我的上限！！", "monthly_targets": {"2026-04": {"target": 7000, "achieved": 6846}}, "current_streak": 0, "today_kcal": null, "total_kcal": 6846, "total_count": 14, "total_duration_hours": 11, "records": [{"date": "2026-04-01", "kcal": 304, "type": "跑步", "duration": 35}, {"date": "2026-04-04", "kcal": 776, "type": "骑行", "duration": 60}, {"date": "2026-04-06", "kcal": 659, "type": "骑行", "duration": 57}, {"date": "2026-04-08", "kcal": 304, "type": "HIIT", "duration": 32}, {"date": "2026-04-11", "kcal": 202, "type": "HIIT", "duration": 20}, {"date": "2026-04-13", "kcal": 305, "type": "HIIT", "duration": 28}, {"date": "2026-04-16", "kcal": 307, "type": "爬坡", "duration": 43}, {"date": "2026-04-18", "kcal": 771, "type": "骑行", "duration": 73}, {"date": "2026-04-19", "kcal": 725, "type": "骑行", "duration": 65}, {"date": "2026-04-20", "kcal": 151, "type": "步行", "duration": 30}, {"date": "2026-04-22", "kcal": 324, "type": "HIIT", "duration": 30}, {"date": "2026-04-24", "kcal": 301, "type": "力量训练", "duration": 30}, {"date": "2026-04-25", "kcal": 768, "type": "骑行", "duration": 83}, {"date": "2026-04-26", "kcal": 949, "type": "骑行/骑行", "duration": 86}]}, {"name": "之奥", "gender": "M", "flag": "挑战自我，突破极限", "monthly_targets": {"2026-04": {"target": 7000, "achieved": 7366}}, "current_streak": 0, "today_kcal": null, "total_kcal": 7366, "total_count": 20, "total_duration_hours": 21, "records": [{"date": "2026-04-01", "kcal": 134, "type": "综合训练", "duration": 26}, {"date": "2026-04-02", "kcal": 109, "type": "HIIT/力量训练", "duration": 14}, {"date": "2026-04-03", "kcal": 154, "type": "综合训练", "duration": 34}, {"date": "2026-04-04", "kcal": 129, "type": "HIIT", "duration": 28}, {"date": "2026-04-05", "kcal": 315, "type": "步行", "duration": 100}, {"date": "2026-04-06", "kcal": 592, "type": "综合训练", "duration": 126}, {"date": "2026-04-07", "kcal": 186, "type": "综合训练", "duration": 25}, {"date": "2026-04-08", "kcal": 895, "type": "步行/足球", "duration": 87}, {"date": "2026-04-11", "kcal": 485, "type": "游泳/步行", "duration": 104}, {"date": "2026-04-12", "kcal": 304, "type": "游泳", "duration": 60}, {"date": "2026-04-14", "kcal": 321, "type": "步行/步行", "duration": 60}, {"date": "2026-04-15", "kcal": 578, "type": "步行/步行", "duration": 96}, {"date": "2026-04-17", "kcal": 411, "type": "步行", "duration": 67}, {"date": "2026-04-18", "kcal": 881, "type": "游泳/骑行/步行", "duration": 190}, {"date": "2026-04-19", "kcal": 289, "type": "步行", "duration": 62}, {"date": "2026-04-20", "kcal": 219, "type": "步行", "duration": 48}, {"date": "2026-04-23", "kcal": 187, "type": "步行", "duration": 31}, {"date": "2026-04-24", "kcal": 202, "type": "跑步", "duration": 30}, {"date": "2026-04-25", "kcal": 553, "type": "篮球", "duration": 46}, {"date": "2026-04-26", "kcal": 422, "type": "游泳", "duration": 83}]}, {"name": "加宝", "gender": "M", "flag": "我在取悦自己，顺便给你看看", "monthly_targets": {"2026-04": {"target": 7000, "achieved": 11916}}, "current_streak": 0, "today_kcal": null, "total_kcal": 11916, "total_count": 13, "total_duration_hours": 19, "records": [{"date": "2026-04-01", "kcal": 394, "type": "跑步", "duration": 39}, {"date": "2026-04-04", "kcal": 1352, "type": "骑行", "duration": 160}, {"date": "2026-04-05", "kcal": 677, "type": "力量训练", "duration": 100}, {"date": "2026-04-06", "kcal": 777, "type": "力量训练", "duration": 0}, {"date": "2026-04-08", "kcal": 603, "type": "力量训练", "duration": 60}, {"date": "2026-04-09", "kcal": 402, "type": "跑步", "duration": 40}, {"date": "2026-04-11", "kcal": 525, "type": "力量训练", "duration": 50}, {"date": "2026-04-12", "kcal": 559, "type": "力量训练", "duration": 50}, {"date": "2026-04-15", "kcal": 712, "type": "力量训练", "duration": 90}, {"date": "2026-04-17", "kcal": 660, "type": "力量训练", "duration": 70}, {"date": "2026-04-18", "kcal": 899, "type": "综合训练", "duration": 90}, {"date": "2026-04-19", "kcal": 788, "type": "力量训练", "duration": 80}, {"date": "2026-04-26", "kcal": 3568, "type": "力量训练/综合训练/骑行/力量训练/力量训练", "duration": 370}]}, {"name": "太宇", "gender": "M", "flag": "健康生活，从运动开始", "monthly_targets": {"2026-04": {"target": 7000, "achieved": 7034}}, "current_streak": 0, "today_kcal": null, "total_kcal": 7034, "total_count": 17, "total_duration_hours": 14, "records": [{"date": "2026-04-01", "kcal": 461, "type": "爬坡", "duration": 40}, {"date": "2026-04-02", "kcal": 365, "type": "步行", "duration": 42}, {"date": "2026-04-03", "kcal": 388, "type": "爬坡", "duration": 50}, {"date": "2026-04-04", "kcal": 386, "type": "步行", "duration": 40}, {"date": "2026-04-05", "kcal": 431, "type": "步行", "duration": 40}, {"date": "2026-04-07", "kcal": 364, "type": "爬坡", "duration": 40}, {"date": "2026-04-08", "kcal": 441, "type": "跑步", "duration": 39}, {"date": "2026-04-09", "kcal": 400, "type": "爬坡", "duration": 40}, {"date": "2026-04-10", "kcal": 329, "type": "爬坡", "duration": 40}, {"date": "2026-04-11", "kcal": 343, "type": "爬坡", "duration": 40}, {"date": "2026-04-13", "kcal": 552, "type": "爬坡/步行", "duration": 75}, {"date": "2026-04-14", "kcal": 627, "type": "爬坡/步行", "duration": 90}, {"date": "2026-04-15", "kcal": 340, "type": "爬坡", "duration": 30}, {"date": "2026-04-17", "kcal": 366, "type": "爬坡", "duration": 35}, {"date": "2026-04-18", "kcal": 161, "type": "步行", "duration": 35}, {"date": "2026-04-19", "kcal": 809, "type": "步行/步行", "duration": 148}, {"date": "2026-04-20", "kcal": 271, "type": "步行", "duration": 50}]}, {"name": "晓识", "gender": "M", "flag": "坚持运动", "monthly_targets": {"2026-04": {"target": 7000, "achieved": 9118}}, "current_streak": 0, "today_kcal": null, "total_kcal": 9118, "total_count": 26, "total_duration_hours": 28, "records": [{"date": "2026-04-01", "kcal": 334, "type": "步行", "duration": 46}, {"date": "2026-04-02", "kcal": 359, "type": "力量训练/步行", "duration": 79}, {"date": "2026-04-03", "kcal": 330, "type": "步行", "duration": 40}, {"date": "2026-04-04", "kcal": 195, "type": "力量训练", "duration": 42}, {"date": "2026-04-05", "kcal": 546, "type": "力量训练/羽毛球", "duration": 90}, {"date": "2026-04-06", "kcal": 285, "type": "步行", "duration": 60}, {"date": "2026-04-07", "kcal": 179, "type": "步行", "duration": 40}, {"date": "2026-04-08", "kcal": 373, "type": "步行", "duration": 50}, {"date": "2026-04-09", "kcal": 209, "type": "力量训练", "duration": 40}, {"date": "2026-04-10", "kcal": 274, "type": "步行", "duration": 75}, {"date": "2026-04-11", "kcal": 402, "type": "步行/力量训练", "duration": 95}, {"date": "2026-04-12", "kcal": 176, "type": "力量训练", "duration": 43}, {"date": "2026-04-13", "kcal": 350, "type": "步行", "duration": 50}, {"date": "2026-04-14", "kcal": 469, "type": "力量训练/步行/步行", "duration": 108}, {"date": "2026-04-15", "kcal": 338, "type": "步行", "duration": 55}, {"date": "2026-04-16", "kcal": 375, "type": "力量训练/步行", "duration": 84}, {"date": "2026-04-17", "kcal": 389, "type": "步行", "duration": 53}, {"date": "2026-04-18", "kcal": 505, "type": "步行/步行/力量训练", "duration": 126}, {"date": "2026-04-19", "kcal": 509, "type": "步行/步行", "duration": 115}, {"date": "2026-04-20", "kcal": 334, "type": "步行/力量训练", "duration": 80}, {"date": "2026-04-21", "kcal": 412, "type": "步行", "duration": 55}, {"date": "2026-04-22", "kcal": 447, "type": "步行", "duration": 50}, {"date": "2026-04-23", "kcal": 263, "type": "跑步", "duration": 35}, {"date": "2026-04-24", "kcal": 307, "type": "跑步", "duration": 30}, {"date": "2026-04-25", "kcal": 194, "type": "力量训练", "duration": 50}, {"date": "2026-04-26", "kcal": 564, "type": "综合训练/步行/骑行", "duration": 130}]}, {"name": "陈雷", "gender": "M", "flag": "破风前行，遇见更好的自己", "monthly_targets": {"2026-04": {"target": 7000, "achieved": 6040}}, "current_streak": 2, "today_kcal": 466, "total_kcal": 6040, "total_count": 14, "total_duration_hours": 12, "records": [{"date": "2026-04-01", "kcal": 309, "type": "骑行", "duration": 38}, {"date": "2026-04-02", "kcal": 461, "type": "骑行/骑行", "duration": 0}, {"date": "2026-04-04", "kcal": 666, "type": "骑行", "duration": 67}, {"date": "2026-04-08", "kcal": 454, "type": "骑行/骑行", "duration": 47}, {"date": "2026-04-10", "kcal": 430, "type": "骑行", "duration": 49}, {"date": "2026-04-13", "kcal": 217, "type": "骑行", "duration": 25}, {"date": "2026-04-15", "kcal": 201, "type": "骑行", "duration": 22}, {"date": "2026-04-16", "kcal": 223, "type": "骑行", "duration": 25}, {"date": "2026-04-17", "kcal": 192, "type": "骑行", "duration": 24}, {"date": "2026-04-18", "kcal": 1001, "type": "骑行", "duration": 93}, {"date": "2026-04-20", "kcal": 436, "type": "骑行/骑行", "duration": 49}, {"date": "2026-04-24", "kcal": 284, "type": "力量训练", "duration": 80}, {"date": "2026-04-26", "kcal": 700, "type": "力量训练", "duration": 192}, {"date": "2026-04-27", "kcal": 466, "type": "骑行/骑行", "duration": 52}]}, {"name": "小涳", "gender": "M", "flag": "每天进步一点点", "monthly_targets": {"2026-04": {"target": 7000, "achieved": 988}}, "current_streak": 0, "today_kcal": null, "total_kcal": 988, "total_count": 2, "total_duration_hours": 1, "records": [{"date": "2026-04-07", "kcal": 105, "type": "足球", "duration": 25}, {"date": "2026-04-08", "kcal": 883, "type": "足球", "duration": 61}]}, {"name": "洵心", "gender": "M", "flag": "享受运动，快乐生活", "monthly_targets": {"2026-04": {"target": 7000, "achieved": 7080}}, "current_streak": 0, "today_kcal": null, "total_kcal": 7080, "total_count": 14, "total_duration_hours": 13, "records": [{"date": "2026-04-02", "kcal": 245, "type": "步行", "duration": 31}, {"date": "2026-04-04", "kcal": 473, "type": "骑行/骑行", "duration": 46}, {"date": "2026-04-05", "kcal": 403, "type": "骑行/骑行", "duration": 50}, {"date": "2026-04-06", "kcal": 900, "type": "步行/骑行/骑行", "duration": 95}, {"date": "2026-04-07", "kcal": 612, "type": "骑行/骑行", "duration": 75}, {"date": "2026-04-08", "kcal": 526, "type": "步行/足球", "duration": 70}, {"date": "2026-04-11", "kcal": 819, "type": "步行/步行", "duration": 81}, {"date": "2026-04-12", "kcal": 504, "type": "骑行", "duration": 50}, {"date": "2026-04-14", "kcal": 238, "type": "步行/步行", "duration": 46}, {"date": "2026-04-15", "kcal": 704, "type": "骑行/骑行/骑行", "duration": 81}, {"date": "2026-04-19", "kcal": 429, "type": "步行", "duration": 56}, {"date": "2026-04-20", "kcal": 476, "type": "步行", "duration": 46}, {"date": "2026-04-21", "kcal": 384, "type": "步行", "duration": 37}, {"date": "2026-04-26", "kcal": 367, "type": "骑行/骑行", "duration": 41}]}, {"name": "福远", "gender": "M", "flag": "目标75KG", "monthly_targets": {"2026-04": {"target": 7000, "achieved": 7616}}, "current_streak": 4, "today_kcal": 398, "total_kcal": 7616, "total_count": 19, "total_duration_hours": 12, "records": [{"date": "2026-04-03", "kcal": 313, "type": "综合训练", "duration": 30}, {"date": "2026-04-04", "kcal": 318, "type": "骑行", "duration": 44}, {"date": "2026-04-05", "kcal": 343, "type": "综合训练", "duration": 30}, {"date": "2026-04-07", "kcal": 444, "type": "综合训练", "duration": 40}, {"date": "2026-04-08", "kcal": 482, "type": "综合训练", "duration": 46}, {"date": "2026-04-09", "kcal": 429, "type": "综合训练", "duration": 40}, {"date": "2026-04-10", "kcal": 272, "type": "跑步", "duration": 30}, {"date": "2026-04-11", "kcal": 376, "type": "跑步", "duration": 30}, {"date": "2026-04-13", "kcal": 302, "type": "综合训练", "duration": 31}, {"date": "2026-04-15", "kcal": 198, "type": "步行", "duration": 36}, {"date": "2026-04-16", "kcal": 407, "type": "综合训练", "duration": 36}, {"date": "2026-04-19", "kcal": 1030, "type": "综合训练/跑步", "duration": 85}, {"date": "2026-04-20", "kcal": 405, "type": "综合训练", "duration": 38}, {"date": "2026-04-21", "kcal": 300, "type": "综合训练", "duration": 30}, {"date": "2026-04-22", "kcal": 378, "type": "综合训练", "duration": 33}, {"date": "2026-04-24", "kcal": 395, "type": "综合训练", "duration": 36}, {"date": "2026-04-25", "kcal": 522, "type": "步行/跑步", "duration": 69}, {"date": "2026-04-26", "kcal": 304, "type": "步行", "duration": 41}, {"date": "2026-04-27", "kcal": 398, "type": "综合训练", "duration": 40}]}, {"name": "杰诚", "gender": "M", "flag": "唤醒自己的潜能", "monthly_targets": {"2026-04": {"target": 7000, "achieved": 8848}}, "current_streak": 0, "today_kcal": null, "total_kcal": 8848, "total_count": 11, "total_duration_hours": 12, "records": [{"date": "2026-04-01", "kcal": 444, "type": "力量训练", "duration": 53}, {"date": "2026-04-02", "kcal": 365, "type": "椭圆机", "duration": 32}, {"date": "2026-04-06", "kcal": 880, "type": "羽毛球", "duration": 0}, {"date": "2026-04-11", "kcal": 1170, "type": "篮球", "duration": 120}, {"date": "2026-04-17", "kcal": 959, "type": "爬坡/步行", "duration": 112}, {"date": "2026-04-18", "kcal": 1072, "type": "篮球", "duration": 110}, {"date": "2026-04-19", "kcal": 528, "type": "力量训练/室内骑行", "duration": 55}, {"date": "2026-04-20", "kcal": 543, "type": "力量训练/室内骑行", "duration": 42}, {"date": "2026-04-22", "kcal": 157, "type": "力量训练", "duration": 15}, {"date": "2026-04-25", "kcal": 2328, "type": "其他/篮球", "duration": 186}, {"date": "2026-04-26", "kcal": 402, "type": "室内骑行", "duration": 34}]}, {"name": "镕清", "gender": "M", "flag": "保持热爱，奔赴山海", "monthly_targets": {"2026-04": {"target": 7000, "achieved": 4830}}, "current_streak": 0, "today_kcal": null, "total_kcal": 4830, "total_count": 14, "total_duration_hours": 12, "records": [{"date": "2026-04-01", "kcal": 228, "type": "步行", "duration": 0}, {"date": "2026-04-02", "kcal": 257, "type": "跑步/跑步", "duration": 27}, {"date": "2026-04-04", "kcal": 411, "type": "跑步", "duration": 45}, {"date": "2026-04-05", "kcal": 245, "type": "步行", "duration": 44}, {"date": "2026-04-08", "kcal": 426, "type": "跑步", "duration": 38}, {"date": "2026-04-11", "kcal": 339, "type": "步行", "duration": 90}, {"date": "2026-04-12", "kcal": 288, "type": "步行", "duration": 90}, {"date": "2026-04-15", "kcal": 484, "type": "跑步", "duration": 37}, {"date": "2026-04-16", "kcal": 121, "type": "步行", "duration": 29}, {"date": "2026-04-17", "kcal": 445, "type": "跑步", "duration": 35}, {"date": "2026-04-18", "kcal": 336, "type": "篮球", "duration": 39}, {"date": "2026-04-19", "kcal": 142, "type": "步行", "duration": 36}, {"date": "2026-04-25", "kcal": 585, "type": "步行", "duration": 136}, {"date": "2026-04-26", "kcal": 523, "type": "步行", "duration": 77}]}, {"name": "重楼", "gender": "M", "flag": "健康的活到去火星那一天", "monthly_targets": {"2026-04": {"target": 7000, "achieved": 8033}}, "current_streak": 0, "today_kcal": null, "total_kcal": 8033, "total_count": 16, "total_duration_hours": 24, "records": [{"date": "2026-04-01", "kcal": 584, "type": "综合训练", "duration": 114}, {"date": "2026-04-02", "kcal": 420, "type": "跑步", "duration": 52}, {"date": "2026-04-04", "kcal": 760, "type": "综合训练/综合训练", "duration": 192}, {"date": "2026-04-05", "kcal": 751, "type": "综合训练/跑步", "duration": 105}, {"date": "2026-04-06", "kcal": 701, "type": "综合训练/综合训练", "duration": 161}, {"date": "2026-04-07", "kcal": 331, "type": "步行", "duration": 50}, {"date": "2026-04-08", "kcal": 250, "type": "爬坡", "duration": 50}, {"date": "2026-04-11", "kcal": 468, "type": "爬坡", "duration": 56}, {"date": "2026-04-12", "kcal": 538, "type": "椭圆机/跑步", "duration": 99}, {"date": "2026-04-13", "kcal": 234, "type": "跑步", "duration": 37}, {"date": "2026-04-14", "kcal": 337, "type": "综合训练", "duration": 50}, {"date": "2026-04-17", "kcal": 410, "type": "爬坡", "duration": 54}, {"date": "2026-04-19", "kcal": 779, "type": "步行/篮球/力量训练", "duration": 163}, {"date": "2026-04-20", "kcal": 604, "type": "其他", "duration": 106}, {"date": "2026-04-22", "kcal": 291, "type": "跑步", "duration": 46}, {"date": "2026-04-25", "kcal": 575, "type": "登山/力量训练", "duration": 129}]}, {"name": "Tarry", "gender": "M", "flag": "运动不需要借口", "monthly_targets": {"2026-04": {"target": 7000, "achieved": 6579}}, "current_streak": 0, "today_kcal": null, "total_kcal": 6579, "total_count": 14, "total_duration_hours": 9, "records": [{"date": "2026-04-01", "kcal": 457, "type": "跑步", "duration": 37}, {"date": "2026-04-04", "kcal": 605, "type": "跑步", "duration": 50}, {"date": "2026-04-05", "kcal": 429, "type": "跑步", "duration": 33}, {"date": "2026-04-09", "kcal": 495, "type": "跑步", "duration": 41}, {"date": "2026-04-12", "kcal": 429, "type": "爬坡", "duration": 40}, {"date": "2026-04-14", "kcal": 210, "type": "步行", "duration": 33}, {"date": "2026-04-16", "kcal": 151, "type": "划船机", "duration": 26}, {"date": "2026-04-18", "kcal": 562, "type": "跑步", "duration": 46}, {"date": "2026-04-19", "kcal": 490, "type": "跑步", "duration": 42}, {"date": "2026-04-20", "kcal": 623, "type": "划船机/步行", "duration": 79}, {"date": "2026-04-21", "kcal": 478, "type": "跑步", "duration": 36}, {"date": "2026-04-23", "kcal": 478, "type": "跑步", "duration": 40}, {"date": "2026-04-25", "kcal": 593, "type": "跑步", "duration": 46}, {"date": "2026-04-26", "kcal": 579, "type": "跑步", "duration": 49}]}];
-const TARGET_DATE = "2026-04-27";
-
-function showMember(name) {
-    const member = MEMBERS_FULL.find(m => m.name === name);
-    if (!member) return;
-    
-    document.getElementById('memberTitle').textContent = member.name;
-    
-    // Generate date range for April to target_date
-    const startDate = new Date('2026-04-01');
-    const endDate = new Date(TARGET_DATE);
-    const dates = [];
-    const dateMap = {};
-    for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-        const ds = d.toISOString().split('T')[0];
-        dates.push(ds);
-        dateMap[ds] = 0;
+var PF = {
+  "date": "2026年5月1日 · 星期五",
+  "daysLeft": 334,
+  "month": "2026年5月",
+  "weekLabel": "W18 · 4月27日—5月3日",
+  "quote": {
+    "text": "每一步都算数，每一滴汗都有光",
+    "author": "破风队"
+  },
+  "darkHorse": {
+    "name": "",
+    "avg7": 0,
+    "todayKcal": 0,
+    "pct": 0
+  },
+  "weekDays": [
+    "周一 4/27",
+    "周二 4/28",
+    "周三 4/29",
+    "周四 4/30",
+    "周五 5/1"
+  ],
+  "weekData": [
+    864,
+    231,
+    375,
+    1544,
+    0
+  ],
+  "weekAvgLine": 603,
+  "weekHero": {
+    "name": "陈雷",
+    "sport": "综合训练",
+    "days": 3,
+    "weekKcal": 1528,
+    "monthP": 0
+  },
+  "weekAwards": [
+    {
+      "emoji": "🔄",
+      "color": "#30D158",
+      "title": "逆风翻盘",
+      "name": "陈雷",
+      "note": "打卡次数净提升最多",
+      "value": "+1次"
     }
-    
-    member.records.forEach(r => {
-        if (dateMap.hasOwnProperty(r.date)) {
-            dateMap[r.date] = r.kcal;
-        }
-    });
-    
-    const chartData = dates.map(d => ({x: d, y: dateMap[d]}));
-    
-    // Daily average target line
-    const daysInMonth = 30;
-    const dailyTarget = member.monthly_targets['2026-04'].target / daysInMonth;
-    
-    // Sport type distribution
-    const sportCounts = {};
-    member.records.forEach(r => {
-        sportCounts[r.type] = (sportCounts[r.type] || 0) + 1;
-    });
-    const sportEntries = Object.entries(sportCounts).sort((a, b) => b[1] - a[1]);
-    const top5 = sportEntries.slice(0, 5);
-    const others = sportEntries.slice(5);
-    const otherCount = others.reduce((s, [,c]) => s + c, 0);
-    if (otherCount > 0) top5.push(['其他', otherCount]);
-    
-    // Heatmap data
-    const months = ['2026-04'];
-    let heatmapHtml = '';
-    months.forEach(month => {
-        const [y, m] = month.split('-').map(Number);
-        const daysInMonth = new Date(y, m, 0).getDate();
-        heatmapHtml += `<div class="heatmap-month"><div class="heatmap-month-title">${y}年${m}月</div><div class="heatmap-grid">`;
-        for (let d = 1; d <= daysInMonth; d++) {
-            const ds = `${month}-${String(d).padStart(2,'0')}`;
-            const kcal = dateMap[ds] || 0;
-            let color = '#2C2C2E';
-            if (kcal > 800) color = '#FF2D55';
-            else if (kcal > 500) color = '#0A84FF';
-            else if (kcal > 200) color = '#1D3557';
-            heatmapHtml += `<div class="heatmap-cell" style="background:${color};color:${kcal>500?'#fff':'#666'}" title="${ds}: ${kcal}kcal">${d}</div>`;
-        }
-        heatmapHtml += '</div></div>';
-    });
-    
-    document.getElementById('memberContent').innerHTML = `
-        <div style="text-align:center; color:#8E8E93; margin-bottom:20px;">2026年4月1日 - 今日</div>
-        <div class="summary-row">
-            <div class="summary-card">
-                <div class="summary-value">${member.total_kcal.toLocaleString()}</div>
-                <div class="summary-label">累计总热量</div>
-            </div>
-            <div class="summary-card">
-                <div class="summary-value">${member.total_count}</div>
-                <div class="summary-label">累计打卡次数</div>
-            </div>
-            <div class="summary-card">
-                <div class="summary-value">${member.total_duration_hours}h</div>
-                <div class="summary-label">累计运动时长</div>
-            </div>
-            <div class="summary-card">
-                <div class="summary-value">${member.current_streak}</div>
-                <div class="summary-label">当前 streak</div>
-            </div>
-        </div>
-        <div class="chart-container">
-            <div class="chart-title">每日热量折线图</div>
-            <canvas id="lineChart"></canvas>
-        </div>
-        <div class="chart-container">
-            <div class="chart-title">运动类型分布</div>
-            <canvas id="donutChart"></canvas>
-        </div>
-        <div class="chart-container">
-            <div class="chart-title">打卡日历热力图</div>
-            ${heatmapHtml}
-        </div>
-    `;
-    
-    document.getElementById('layer2').classList.add('active');
-    
-    // Line chart
-    const ctxLine = document.getElementById('lineChart').getContext('2d');
-    new Chart(ctxLine, {
-        type: 'line',
-        data: {
-            labels: dates,
-            datasets: [{
-                label: '每日热量 (kcal)',
-                data: dates.map(d => dateMap[d]),
-                borderColor: '#0A84FF',
-                backgroundColor: 'transparent',
-                borderWidth: 2,
-                pointRadius: 2,
-                spanGaps: false
-            }, {
-                label: '目标日均值',
-                data: dates.map(() => dailyTarget),
-                borderColor: '#FF2D55',
-                borderDash: [5, 5],
-                borderWidth: 1,
-                pointRadius: 0,
-                fill: false
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: { legend: { display: true, labels: { color: '#8E8E93' } } },
-            scales: {
-                x: { ticks: { color: '#8E8E93', maxTicksLimit: 10 } },
-                y: { ticks: { color: '#8E8E93' }, grid: { color: '#38383A' } }
-            }
-        }
-    });
-    
-    // Donut chart
-    const ctxDonut = document.getElementById('donutChart').getContext('2d');
-    const colors = ['#FF2D55', '#0A84FF', '#30D158', '#FF9F0A', '#BF5AF2', '#8E8E93'];
-    new Chart(ctxDonut, {
-        type: 'doughnut',
-        data: {
-            labels: top5.map(x => x[0]),
-            datasets: [{
-                data: top5.map(x => x[1]),
-                backgroundColor: colors,
-                borderWidth: 0
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: { legend: { position: 'bottom', labels: { color: '#8E8E93' } } }
-        }
-    });
-}
-
-function hideMember() {
-    document.getElementById('layer2').classList.remove('active');
-}
+  ],
+  "weekChamps": [
+    {
+      "w": "W14 · 3/30-4/5",
+      "n": "重楼",
+      "k": 2515,
+      "cur": false
+    },
+    {
+      "w": "W15 · 4/6-4/12",
+      "n": "洵心",
+      "k": 3361,
+      "cur": false
+    },
+    {
+      "w": "W16 · 4/13-4/19",
+      "n": "加宝",
+      "k": 3059,
+      "cur": false
+    },
+    {
+      "w": "W17 · 4/20-4/26",
+      "n": "加宝",
+      "k": 3568,
+      "cur": false
+    },
+    {
+      "w": "W18 · 4/27-5/3",
+      "n": "陈雷",
+      "k": 1528,
+      "cur": true
+    }
+  ],
+  "monthAwards": [],
+  "fund": {
+    "达标": 0,
+    "未达标": 16,
+    "新增": 8000,
+    "累计": 8000,
+    "豁免": ""
+  },
+  "members": [
+    {
+      "n": "雷加",
+      "g": "男",
+      "target": 7500,
+      "targetNote": "",
+      "p": 0,
+      "s": 0,
+      "monthly": 0,
+      "today": 0,
+      "sport": "",
+      "wk": 297,
+      "wd": 1,
+      "h": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "lm": 7332,
+      "mwk": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "sd": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "n": "婉思",
+      "g": "女",
+      "target": 5100,
+      "targetNote": "",
+      "p": 0,
+      "s": 0,
+      "monthly": 0,
+      "today": 0,
+      "sport": "",
+      "wk": 0,
+      "wd": 0,
+      "h": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "lm": 5925,
+      "mwk": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "sd": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "n": "伊竹",
+      "g": "女",
+      "target": 5100,
+      "targetNote": "",
+      "p": 0,
+      "s": 0,
+      "monthly": 0,
+      "today": 0,
+      "sport": "",
+      "wk": 0,
+      "wd": 0,
+      "h": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "lm": 1519,
+      "mwk": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "sd": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "n": "梓杉",
+      "g": "男",
+      "target": 7500,
+      "targetNote": "",
+      "p": 0,
+      "s": 0,
+      "monthly": 0,
+      "today": 0,
+      "sport": "",
+      "wk": 375,
+      "wd": 1,
+      "h": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "lm": 7221,
+      "mwk": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "sd": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "n": "之奥",
+      "g": "男",
+      "target": 7500,
+      "targetNote": "",
+      "p": 0,
+      "s": 0,
+      "monthly": 0,
+      "today": 0,
+      "sport": "",
+      "wk": 0,
+      "wd": 0,
+      "h": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "lm": 7257,
+      "mwk": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "sd": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "n": "加宝",
+      "g": "男",
+      "target": 7500,
+      "targetNote": "",
+      "p": 0,
+      "s": 0,
+      "monthly": 0,
+      "today": 0,
+      "sport": "",
+      "wk": 0,
+      "wd": 0,
+      "h": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "lm": 11916,
+      "mwk": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "sd": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "n": "太宇",
+      "g": "男",
+      "target": 7500,
+      "targetNote": "",
+      "p": 0,
+      "s": 0,
+      "monthly": 0,
+      "today": 0,
+      "sport": "",
+      "wk": 0,
+      "wd": 0,
+      "h": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "lm": 7034,
+      "mwk": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "sd": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "n": "晓识",
+      "g": "男",
+      "target": 7500,
+      "targetNote": "",
+      "p": 0,
+      "s": 0,
+      "monthly": 0,
+      "today": 0,
+      "sport": "",
+      "wk": 416,
+      "wd": 1,
+      "h": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "lm": 9534,
+      "mwk": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "sd": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "n": "陈雷",
+      "g": "男",
+      "target": 7500,
+      "targetNote": "",
+      "p": 0,
+      "s": 0,
+      "monthly": 0,
+      "today": 0,
+      "sport": "",
+      "wk": 1528,
+      "wd": 3,
+      "h": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "lm": 7102,
+      "mwk": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "sd": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "n": "小涳",
+      "g": "男",
+      "target": 7500,
+      "targetNote": "",
+      "p": 0,
+      "s": 0,
+      "monthly": 0,
+      "today": 0,
+      "sport": "",
+      "wk": 0,
+      "wd": 0,
+      "h": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "lm": 988,
+      "mwk": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "sd": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "n": "洵心",
+      "g": "男",
+      "target": 7500,
+      "targetNote": "",
+      "p": 0,
+      "s": 0,
+      "monthly": 0,
+      "today": 0,
+      "sport": "",
+      "wk": 0,
+      "wd": 0,
+      "h": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "lm": 6988,
+      "mwk": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "sd": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "n": "福远",
+      "g": "男",
+      "target": 7500,
+      "targetNote": "",
+      "p": 0,
+      "s": 0,
+      "monthly": 0,
+      "today": 0,
+      "sport": "",
+      "wk": 398,
+      "wd": 1,
+      "h": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "lm": 7616,
+      "mwk": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "sd": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "n": "杰诚",
+      "g": "男",
+      "target": 7500,
+      "targetNote": "",
+      "p": 0,
+      "s": 0,
+      "monthly": 0,
+      "today": 0,
+      "sport": "",
+      "wk": 0,
+      "wd": 0,
+      "h": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "lm": 8848,
+      "mwk": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "sd": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "n": "镕清",
+      "g": "男",
+      "target": 7500,
+      "targetNote": "",
+      "p": 0,
+      "s": 0,
+      "monthly": 0,
+      "today": 0,
+      "sport": "",
+      "wk": 0,
+      "wd": 0,
+      "h": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "lm": 4747,
+      "mwk": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "sd": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "n": "重楼",
+      "g": "男",
+      "target": 7500,
+      "targetNote": "",
+      "p": 0,
+      "s": 0,
+      "monthly": 0,
+      "today": 0,
+      "sport": "",
+      "wk": 0,
+      "wd": 0,
+      "h": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "lm": 8033,
+      "mwk": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "sd": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "n": "Tarry",
+      "g": "男",
+      "target": 7500,
+      "targetNote": "",
+      "p": 0,
+      "s": 0,
+      "monthly": 0,
+      "today": 0,
+      "sport": "",
+      "wk": 0,
+      "wd": 0,
+      "h": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "lm": 6579,
+      "mwk": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "sd": [
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  ]
+};
 </script>
+<!-- POFENG_DATA_END -->
 
+<!-- ═══════════════════════════════════════════════════════
+     渲染逻辑（不需要修改）
+═══════════════════════════════════════════════════════ -->
+<script>
+var SPORT_LABELS = ['跑步','力量训练','瑜伽/拉伸','骑行'];
+var SPORT_COLORS = ['#0A84FF','#FF2D55','#30D158','#FF9F0A'];
+var ENCS = [
+  '「破风路上，不落一人。今天还来得及，动起来 💪」',
+  '「每一滴汗水都是对未来的投资，队友等你！🔥」',
+  '「别让今天的懒惰，成为明天和队友的差距。冲！🚴」',
+  '「凌晨三点的努力你看不到，但今晚的打卡你能做到 ⚡」',
+  '「运动不一定让你赢，但不运动一定会让你输 💪」',
+  '「差旅中的雷加都在打卡，你还在等什么？🏃」',
+  '「今日不动，明日多痛。快去运动吧 🎯」',
+];
+
+var TABS = [
+  {id:'day',   label:'日',   color:'#FF2D55'},
+  {id:'week',  label:'周',   color:'#30D158'},
+  {id:'month', label:'月',   color:'#FF9F0A'},
+  {id:'rules', label:'规则', color:'#0A84FF'},
+];
+var currentTab='day', detailChart=null, detailChart2=null;
+
+/* ── 工具 ── */
+function gc(p){return p>=100?'#30D158':p>=70?'#FF9F0A':'#FF2D55';}
+function fmt(n){return n.toLocaleString();}
+
+function ring(p,sz){
+  var r=sz*.38,c=2*Math.PI*r,col=gc(p),f=Math.min(p/100,1)*c,g=c-f,ov='';
+  if(p>100){
+    var r2=r*.74,c2=2*Math.PI*r2,f2=Math.min((p-100)/100,1)*c2;
+    ov='<circle cx="'+sz/2+'" cy="'+sz/2+'" r="'+r2+'" fill="none" stroke="'+col
+      +'" stroke-opacity=".35" stroke-width="'+(sz*.062)+'" stroke-dasharray="'+f2+' '+c2
+      +'" stroke-linecap="round" transform="rotate(-90 '+sz/2+' '+sz/2+')"/>';
+  }
+  return '<svg width="'+sz+'" height="'+sz+'" viewBox="0 0 '+sz+' '+sz+'">'
+    +'<circle cx="'+sz/2+'" cy="'+sz/2+'" r="'+r+'" fill="none" stroke="#2C2C2E" stroke-width="'+(sz*.082)+'"/>'
+    +'<circle cx="'+sz/2+'" cy="'+sz/2+'" r="'+r+'" fill="none" stroke="'+col+'" stroke-width="'+(sz*.082)
+    +'" stroke-dasharray="'+f+' '+g+'" stroke-linecap="round" transform="rotate(-90 '+sz/2+' '+sz/2+')"/>'
+    +ov
+    +'<text x="'+sz/2+'" y="'+(sz/2+.5)+'" text-anchor="middle" dominant-baseline="middle" fill="'+col
+    +'" font-size="'+(sz*.175)+'px" font-weight="700" font-family="-apple-system,sans-serif">'+p+'%</text>'
+    +'</svg>';
+}
+
+function awardRow(a){
+  return '<div class="aw">'
+    +'<span style="font-size:15px;width:22px;text-align:center;flex-shrink:0;">'+a.emoji+'</span>'
+    +'<div style="flex:1;">'
+      +'<div style="font-size:9px;color:'+a.color+';font-weight:700;">'+a.title+'</div>'
+      +'<div style="font-size:13px;font-weight:600;margin-top:2px;">'+a.name+'</div>'
+      +'<div style="font-size:10px;color:#636366;margin-top:1px;">'+a.note+'</div>'
+    +'</div>'
+    +'<div style="font-size:16px;font-weight:800;color:'+a.color+';flex-shrink:0;">'+a.value+'</div>'
+    +'</div>';
+}
+
+/* ── Tab bar ── */
+document.getElementById('tabbar').innerHTML=TABS.map(function(t){
+  var a=t.id==='day';
+  return '<button class="tbtn" onclick="sw(\''+t.id+'\')" id="t-'+t.id+'"'
+    +' style="font-size:13px;background:'+(a?t.color:'transparent')+';color:'+(a?'#fff':'#636366')+';font-weight:'+(a?700:500)+';">'+t.label+'</button>';
+}).join('');
+
+function sw(id){
+  currentTab=id;
+  document.getElementById('v-detail').style.display='none';
+  TABS.forEach(function(t){
+    document.getElementById('v-'+t.id).style.display=t.id===id?'block':'none';
+    var b=document.getElementById('t-'+t.id);
+    b.style.background=t.id===id?t.color:'transparent';
+    b.style.color=t.id===id?'#fff':'#636366';
+    b.style.fontWeight=t.id===id?700:500;
+  });
+  window.scrollTo(0,0);
+  if(id==='week'&&!window._wkDone)  setTimeout(renderWeekTab, 60);
+  if(id==='month'&&!window._mkDone) renderMonthTab();
+}
+
+/* ══════════════════════════════════════
+   日报渲染
+══════════════════════════════════════ */
+function renderDayTab(){
+  var M=PF.members;
+
+  /* 日期标题 */
+  document.getElementById('day-header').innerHTML=
+    PF.date+' · 距目标 <span style="color:#FF9F0A;font-weight:600;">'+PF.daysLeft+'天</span>';
+
+  /* 今日排名（按 today kcal 降序，仅打卡者） */
+  var ranked=M.filter(function(m){return m.today>0;})
+              .sort(function(a,b){return b.today-a.today;});
+  var unchecked=M.filter(function(m){return m.today===0;});
+
+  /* 今日统计 */
+  var totalToday=ranked.reduce(function(s,m){return s+m.today;},0);
+  var avgToday=ranked.length?Math.round(totalToday/ranked.length):0;
+  document.getElementById('day-stats').innerHTML=
+    '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">'
+    +'<div style="background:#1C1C1E;border-radius:11px;padding:12px 10px;">'
+      +'<div style="font-size:10px;color:#636366;margin-bottom:4px;">今日打卡</div>'
+      +'<div style="font-size:20px;font-weight:700;color:#30D158;">'+ranked.length+' <span style="font-size:11px;color:#48484A;font-weight:400;">/ '+M.length+'</span></div></div>'
+    +'<div style="background:#1C1C1E;border-radius:11px;padding:12px 10px;">'
+      +'<div style="font-size:10px;color:#636366;margin-bottom:4px;">今日消耗</div>'
+      +'<div style="font-size:20px;font-weight:700;color:#FF2D55;">'+fmt(totalToday)+'</div></div>'
+    +'<div style="background:#1C1C1E;border-radius:11px;padding:12px 10px;">'
+      +'<div style="font-size:10px;color:#636366;margin-bottom:4px;">今日人均</div>'
+      +'<div style="font-size:20px;font-weight:700;color:#0A84FF;">'+fmt(avgToday)+'</div></div>'
+    +'</div>';
+
+  /* Hero #1 */
+  if(ranked.length>0){
+    var h=ranked[0], hcol=gc(h.p);
+    document.getElementById('day-hero').innerHTML=
+      '<div style="background:#1C1C1E;border-radius:16px;padding:18px;border:0.5px solid #FF9F0A45;">'
+      +'<div style="font-size:9px;color:#FF9F0A;font-weight:700;letter-spacing:1.2px;margin-bottom:12px;">今日破风榜 · No.1</div>'
+      +'<div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;">'
+        +'<div style="flex-shrink:0;">'+ring(h.p,90)+'</div>'
+        +'<div style="flex:1;min-width:0;">'
+          +'<div style="font-size:26px;font-weight:800;line-height:1;">'+h.n+'</div>'
+          +'<div style="font-size:12px;color:#636366;margin-top:3px;">'+(h.sport||'综合训练')+' · 今日打卡</div>'
+          +'<div style="font-size:20px;font-weight:700;color:#FF9F0A;margin-top:6px;">'+fmt(h.today)+' <span style="font-size:12px;color:#636366;font-weight:400;">kcal 今日</span></div>'
+        +'</div>'
+        +'<div style="text-align:right;flex-shrink:0;">'
+          +'<div style="font-size:10px;color:#636366;">月度完成</div>'
+          +'<div style="font-size:20px;font-weight:800;color:'+hcol+';">'+h.p+'%</div>'
+        +'</div>'
+      +'</div>'
+      +'<div style="background:#2C2C2E;border-radius:9px;padding:10px 12px;">'
+        +'<span style="font-size:12px;color:#48484A;">「</span>'
+        +'<span style="font-size:12px;color:#d4d4d4;font-style:italic;">'+PF.quote.text+'</span>'
+        +'<span style="font-size:12px;color:#48484A;">」— '+PF.quote.author+'</span>'
+      +'</div>'
+      +'</div>';
+  }
+
+  /* Podium #2 #3 */
+  var podiumHtml='<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">';
+  var medals=['🥈 今日第二','🥉 今日第三'];
+  for(var i=1;i<=2;i++){
+    if(ranked[i]){
+      var pm=ranked[i];
+      podiumHtml+='<div style="background:#1C1C1E;border-radius:13px;padding:14px 10px;text-align:center;">'
+        +'<div style="font-size:9px;color:#636366;letter-spacing:0.6px;margin-bottom:8px;">'+medals[i-1]+'</div>'
+        +'<div style="display:flex;justify-content:center;margin-bottom:7px;">'+ring(pm.p,62)+'</div>'
+        +'<div style="font-size:14px;font-weight:700;">'+pm.n+'</div>'
+        +'<div style="font-size:11px;color:#8E8E93;margin-top:3px;">'+fmt(pm.today)+' kcal · '+(pm.sport||'综合训练')+'</div>'
+        +'</div>';
+    }
+  }
+  podiumHtml+='</div>';
+  document.getElementById('day-podium').innerHTML=podiumHtml;
+
+  /* Rank #4+ */
+  var rest=ranked.slice(3);
+  var rl=document.getElementById('day-rank4-label');
+  if(rest.length>0){
+    rl.style.display='block';
+    document.getElementById('day-rank4').innerHTML=rest.map(function(m,i){
+      var col=gc(m.p);
+      return '<div class="mc" onclick="showDayMember('+M.indexOf(m)+')" style="background:#1C1C1E;border-radius:11px;padding:9px 4px 8px;text-align:center;">'
+        +'<div style="font-size:9px;color:#636366;margin-bottom:4px;">#'+(i+4)+'</div>'
+        +'<div style="display:flex;justify-content:center;margin-bottom:4px;">'+ring(m.p,50)+'</div>'
+        +'<div style="font-size:12px;font-weight:600;">'+m.n+'</div>'
+        +'<div style="font-size:10px;color:'+col+';margin-top:2px;font-weight:600;">'+m.today+'</div>'
+        +'<div style="font-size:9px;color:#48484A;">kcal</div>'
+        +'</div>';
+    }).join('');
+  }
+
+  /* 未打卡 */
+  if(unchecked.length>0){
+    var enc=ENCS[new Date().getDay()%ENCS.length];
+    document.getElementById('day-unchecked-card').innerHTML=
+      '<div style="background:#1C1C1E;border-radius:13px;padding:14px;">'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">'
+        +'<div style="font-size:10px;color:#FF2D55;font-weight:700;letter-spacing:0.8px;">⏰ 还没打卡的队友 · '+unchecked.length+'人</div>'
+      +'</div>'
+      +'<div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px;">'
+        +unchecked.map(function(m){
+          return '<div style="background:#2C2C2E;border-radius:7px;padding:5px 10px;font-size:12px;color:#636366;">'+m.n+'</div>';
+        }).join('')
+      +'</div>'
+      +'<div style="background:#2C2C2E;border-radius:8px;padding:10px 12px;font-size:12px;color:#d4d4d4;font-style:italic;line-height:1.65;">'+enc+'</div>'
+      +'</div>';
+  }
+
+  /* 今日黑马 */
+  var dh=PF.darkHorse;
+  document.getElementById('day-darkhorse').innerHTML=
+    '<div style="background:#1C1C1E;border-left:3px solid #0A84FF;border-radius:0 13px 13px 0;padding:13px 14px;display:flex;align-items:center;gap:12px;">'
+    +'<span style="font-size:22px;flex-shrink:0;">⚡</span>'
+    +'<div style="flex:1;min-width:0;">'
+      +'<div style="font-size:9px;color:#0A84FF;font-weight:700;letter-spacing:0.8px;margin-bottom:3px;">今日黑马</div>'
+      +'<div style="font-size:15px;font-weight:700;">'+dh.name+'</div>'
+      +'<div style="font-size:11px;color:#636366;margin-top:1px;">7日均值 '+fmt(dh.avg7)+' → 今日 '+fmt(dh.todayKcal)+' kcal</div>'
+    +'</div>'
+    +'<div style="font-size:22px;font-weight:800;color:#0A84FF;flex-shrink:0;">+'+dh.pct+'%</div>'
+    +'</div>';
+
+  /* 本月进度 grid */
+  document.getElementById('day-monthly-grid').innerHTML=M.map(function(m,i){
+    var ck=m.today>0;
+    return '<div class="mc" onclick="showDayMember('+i+')" style="background:#1C1C1E;border-radius:11px;padding:10px 4px 9px;text-align:center;'+(ck?'border:0.5px solid #30D15838':'')+';">'
+      +'<div style="display:flex;justify-content:center;margin-bottom:5px;">'+ring(m.p,54)+'</div>'
+      +'<div style="font-size:12px;font-weight:600;">'+m.n+'</div>'
+      +'<div style="width:5px;height:5px;border-radius:50%;background:'+(ck?'#30D158':'transparent')+';margin:4px auto 0;"></div>'
+      +'</div>';
+  }).join('');
+}
+
+/* ══════════════════════════════════════
+   周报渲染
+══════════════════════════════════════ */
+function renderWeekTab(){
+  window._wkDone=true;
+  var wh=PF.weekHero;
+
+  /* 标题 */
+  document.getElementById('week-header').innerHTML=
+    '<div style="font-size:12px;color:#636366;margin-bottom:4px;">'+PF.weekLabel+'</div>'
+    +'<div style="font-size:20px;font-weight:800;margin-bottom:16px;">本周战报</div>';
+
+  /* 领风者 */
+  document.getElementById('week-hero').innerHTML=
+    '<div style="background:#1C1C1E;border-radius:16px;padding:18px;border:0.5px solid #30D15845;">'
+    +'<div style="font-size:9px;color:#30D158;font-weight:700;letter-spacing:1.2px;margin-bottom:12px;">本周领风者</div>'
+    +'<div style="display:flex;align-items:center;gap:14px;">'
+      +'<div style="flex-shrink:0;">'+ring(wh.monthP,90)+'</div>'
+      +'<div style="flex:1;min-width:0;">'
+        +'<div style="font-size:26px;font-weight:800;line-height:1;">'+wh.name+'</div>'
+        +'<div style="font-size:12px;color:#636366;margin-top:3px;">'+wh.sport+' · 本周'+wh.days+'次打卡</div>'
+        +'<div style="font-size:20px;font-weight:700;color:#30D158;margin-top:6px;">'+fmt(wh.weekKcal)+' <span style="font-size:12px;color:#48484A;font-weight:400;">kcal 本周</span></div>'
+      +'</div>'
+      +'<div style="text-align:right;flex-shrink:0;">'
+        +'<div style="font-size:10px;color:#636366;">月度完成</div>'
+        +'<div style="font-size:20px;font-weight:800;color:#30D158;">'+wh.monthP+'%</div>'
+      +'</div>'
+    +'</div>'
+    +'</div>';
+
+  /* 周度荣耀 */
+  document.getElementById('week-awards').innerHTML=
+    '<div class="sl">本周荣耀</div>'+PF.weekAwards.map(awardRow).join('');
+
+  /* 每日折线图 */
+  new Chart(document.getElementById('wk-chart').getContext('2d'),{
+    type:'bar',
+    data:{
+      labels:PF.weekDays,
+      datasets:[
+        {type:'bar',  data:PF.weekData, backgroundColor:'#30D15825',borderColor:'#30D158',borderWidth:1.5,borderRadius:5},
+        {type:'line', data:new Array(PF.weekData.length).fill(PF.weekAvgLine),
+         borderColor:'#3A3A3C',borderDash:[4,3],pointRadius:0,fill:false,borderWidth:1.5,tension:0}
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{
+        x:{ticks:{color:'#636366',font:{size:10}},grid:{color:'#1C1C1E'},border:{color:'#1C1C1E'}},
+        y:{ticks:{color:'#636366',font:{size:10},callback:function(v){return (v/1000).toFixed(0)+'k';}},grid:{color:'#2C2C2E'},border:{color:'#2C2C2E'}}
+      }}
+  });
+
+  /* 本周成员明细 */
+  var sorted=[].concat(PF.members).sort(function(a,b){return b.wk-a.wk;});
+  var maxWk=sorted[0].wk;
+  document.getElementById('week-members').innerHTML=sorted.map(function(m,i){
+    var col=gc(m.p),bw=m.wk/maxWk*100;
+    return '<div style="display:flex;align-items:center;gap:8px;padding:7px 0;'+(i>0?'border-top:0.5px solid #2C2C2E':'')+'">'
+      +'<div style="font-size:11px;color:#636366;width:16px;text-align:right;">'+(i+1)+'</div>'
+      +'<div style="font-size:13px;font-weight:600;width:30px;flex-shrink:0;">'+m.n+'</div>'
+      +'<div style="flex:1;min-width:0;">'
+        +'<div style="height:5px;background:#2C2C2E;border-radius:3px;overflow:hidden;margin-bottom:3px;">'
+          +'<div style="height:100%;background:'+col+';border-radius:3px;width:'+bw+'%;"></div>'
+        +'</div>'
+        +'<div style="font-size:9px;color:#48484A;">'+m.wd+'次打卡</div>'
+      +'</div>'
+      +'<div style="font-size:13px;font-weight:700;color:'+col+';min-width:44px;text-align:right;">'+fmt(m.wk)+'</div>'
+      +'</div>';
+  }).join('');
+
+  /* 历史周冠军 */
+  document.getElementById('week-champs').innerHTML=PF.weekChamps.map(function(wc){
+    var cur=wc.cur;
+    return '<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:'+(cur?'#1C1C3A':'#1C1C1E')+';border-radius:9px;margin-bottom:4px;'+(cur?'border:0.5px solid #30D15845':'')+';">'
+      +'<div style="font-size:10px;color:#636366;flex:1;">'+wc.w+(cur?' <span style="color:#30D158;font-size:9px;">· 本周</span>':'')+'</div>'
+      +'<div style="font-size:14px;font-weight:700;color:'+(cur?'#30D158':'#FF9F0A')+';min-width:28px;text-align:center;">'+wc.n+'</div>'
+      +'<div style="font-size:12px;color:#636366;min-width:52px;text-align:right;">'+fmt(wc.k)+' kcal</div>'
+      +'</div>';
+  }).join('');
+}
+
+/* ══════════════════════════════════════
+   月报渲染
+══════════════════════════════════════ */
+function renderMonthTab(){
+  window._mkDone=true;
+  var M=PF.members;
+
+  /* 月报标题 */
+  document.getElementById('month-header').innerHTML=
+    '<div style="font-size:12px;color:#636366;margin-bottom:4px;">'+PF.month+'</div>'
+    +'<div style="font-size:20px;font-weight:800;margin-bottom:16px;">月度总结</div>';
+
+  /* 团队概览 */
+  var totalMonthly=M.reduce(function(s,m){return s+m.monthly;},0);
+  var avgP=Math.round(M.reduce(function(s,m){return s+m.p;},0)/M.length);
+  var totalFat=(totalMonthly/7700).toFixed(1);
+  var chickensAll=Math.round(totalMonthly/290);
+  var达标=M.filter(function(m){return m.p>=100;}).length;
+  document.getElementById('month-overview').innerHTML=
+    '<div style="background:#1C1C1E;border-radius:16px;padding:16px;">'
+    +'<div class="sl">团队月度概览</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">'
+      +'<div style="background:#2C2C2E;border-radius:11px;padding:12px;">'
+        +'<div style="font-size:10px;color:#636366;margin-bottom:4px;">团队月度消耗</div>'
+        +'<div style="font-size:17px;font-weight:700;color:#FF9F0A;">'+fmt(totalMonthly)+' <span style="font-size:10px;color:#48484A;font-weight:400;">kcal</span></div></div>'
+      +'<div style="background:#2C2C2E;border-radius:11px;padding:12px;">'
+        +'<div style="font-size:10px;color:#636366;margin-bottom:4px;">团队平均完成</div>'
+        +'<div style="font-size:17px;font-weight:700;color:#30D158;">'+avgP+'%</div></div>'
+      +'<div style="background:#2C2C2E;border-radius:11px;padding:12px;">'
+        +'<div style="font-size:10px;color:#636366;margin-bottom:4px;">全员等效燃脂</div>'
+        +'<div style="font-size:17px;font-weight:700;color:#0A84FF;">'+totalFat+' <span style="font-size:10px;color:#48484A;font-weight:400;">kg</span></div></div>'
+      +'<div style="background:#2C2C2E;border-radius:11px;padding:12px;">'
+        +'<div style="font-size:10px;color:#636366;margin-bottom:4px;">达标人数</div>'
+        +'<div style="font-size:17px;font-weight:700;color:#30D158;">'+达标+' <span style="font-size:10px;color:#48484A;font-weight:400;">/ '+M.length+'人</span></div></div>'
+    +'</div>'
+    +'<div style="background:#2C2C2E;border-radius:9px;padding:10px 12px;font-size:12px;color:#d4d4d4;line-height:1.85;">'
+      +'全队'+PF.month.replace('年','年').replace('月','月')+'共燃 '+fmt(totalMonthly)+' kcal<br>'
+      +'🍗 相当于 <span style="color:#FF9F0A;font-weight:600;">'+chickensAll+' 个炸鸡腿</span> · 少胖了合计 <span style="color:#30D158;font-weight:600;">'+totalFat+' kg</span>'
+    +'</div>'
+    +'</div>';
+
+  /* 月度荣耀 */
+  document.getElementById('month-awards').innerHTML=
+    '<div class="sl">月度荣耀</div>'+PF.monthAwards.map(awardRow).join('');
+
+  /* 全员群像 */
+  var sorted=[].concat(M).sort(function(a,b){return b.p-a.p;});
+  document.getElementById('month-group').innerHTML=sorted.map(function(m,i){
+    var col=gc(m.p);
+    var chickens=Math.round(m.monthly/290);
+    var kgSaved=(m.monthly/7700).toFixed(1);
+    var progStr=m.lm>0
+      ? (function(){var pct=Math.round((m.monthly-m.lm)/m.lm*100);
+          return '<span style="color:'+(pct>=0?'#30D158':'#FF2D55')+';font-size:10px;font-weight:600;">'+(pct>=0?'↑':'↓')+Math.abs(pct)+'%</span>';}())
+      : '<span style="color:#636366;font-size:10px;">首次参与</span>';
+    var rank=i+1,rankStr=rank<=3?['🥇','🥈','🥉'][rank-1]:'<span style="color:#636366;font-size:10px;">#'+rank+'</span>';
+    return '<div class="mc" onclick="showMonthMember('+M.indexOf(m)+')" style="background:#1C1C1E;border-radius:13px;padding:14px 12px;">'
+      +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">'
+        +'<div>'+ring(m.p,52)+'</div>'
+        +'<div style="flex:1;min-width:0;">'
+          +'<div style="font-size:15px;font-weight:700;">'+m.n+'</div>'
+          +'<div style="font-size:10px;color:#636366;">'+m.g+' · '+rankStr+'</div>'
+        +'</div>'
+      +'</div>'
+      +'<div style="font-size:18px;font-weight:700;color:'+col+';margin-bottom:2px;">'+fmt(m.monthly)+'<span style="font-size:10px;color:#48484A;font-weight:400;margin-left:3px;">kcal</span></div>'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-top:7px;">'
+        +'<div style="font-size:11px;color:#FF9F0A;">🍗 '+chickens+'个</div>'
+        +'<div style="font-size:11px;color:#0A84FF;">少胖 '+kgSaved+'kg</div>'
+      +'</div>'
+      +'<div style="margin-top:6px;padding-top:6px;border-top:0.5px solid #2C2C2E;display:flex;justify-content:space-between;align-items:center;">'
+        +'<div style="font-size:10px;color:#636366;">环比上月</div>'+progStr
+      +'</div>'
+      +'</div>';
+  }).join('');
+
+  /* 破风基金 */
+  var f=PF.fund;
+  document.getElementById('month-fund').innerHTML=
+    '<div style="background:#1C1C1E;border-radius:13px;padding:14px;border:0.5px solid #FF9F0A30;">'
+    +'<div style="font-size:10px;color:#FF9F0A;font-weight:700;letter-spacing:1px;margin-bottom:12px;text-transform:uppercase;">破风基金 · '+PF.month+'结算</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">'
+      +'<div style="background:#2C2C2E;border-radius:9px;padding:10px;"><div style="font-size:10px;color:#636366;margin-bottom:4px;">达标人数</div><div style="font-size:18px;font-weight:700;color:#30D158;">'+f.达标+'人</div></div>'
+      +'<div style="background:#2C2C2E;border-radius:9px;padding:10px;"><div style="font-size:10px;color:#636366;margin-bottom:4px;">未达标</div><div style="font-size:18px;font-weight:700;color:#FF2D55;">'+f.未达标+'人</div></div>'
+      +'<div style="background:#2C2C2E;border-radius:9px;padding:10px;"><div style="font-size:10px;color:#636366;margin-bottom:4px;">本月新增</div><div style="font-size:18px;font-weight:700;color:#FF9F0A;">¥'+fmt(f.新增)+'</div></div>'
+      +'<div style="background:#2C2C2E;border-radius:9px;padding:10px;"><div style="font-size:10px;color:#636366;margin-bottom:4px;">累计基金池</div><div style="font-size:18px;font-weight:700;color:#FF9F0A;">¥'+fmt(f.累计)+'</div></div>'
+    +'</div>'
+    +(f.豁免?'<div style="font-size:11px;color:#636366;">病假豁免：'+f.豁免+'</div>':'')
+    +'</div>';
+}
+
+/* ══════════════════════════════════════
+   规则页：本月各人实际目标
+══════════════════════════════════════ */
+function renderRulesTargets(){
+  /* 倒计时 */
+  document.getElementById('r-countdown').innerHTML=
+    '<div style="font-size:10px;color:#636366;margin-bottom:3px;">倒计时</div>'
+    +'<div style="font-size:15px;font-weight:700;color:#FF2D55;">'+PF.daysLeft+'天</div>';
+
+  document.getElementById('r-targets-month').textContent=PF.month;
+
+  var M=PF.members;
+  var adjusted=M.filter(function(m){return m.targetNote&&m.targetNote!=='';});
+  var baseM=7000, baseF=4800;
+
+  document.getElementById('r-targets').innerHTML=M.map(function(m){
+    var isAdj=m.targetNote&&m.targetNote!=='';
+    var col=isAdj?'#FF9F0A':'#d4d4d4';
+    var bg=isAdj?'#2C1E00':'#2C2C2E';
+    return '<div style="background:'+bg+';border-radius:9px;padding:9px 10px;'+(isAdj?'border:0.5px solid #FF9F0A40':'')+';">'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px;">'
+        +'<span style="font-size:13px;font-weight:600;color:'+col+';">'+m.n+'</span>'
+        +'<span style="font-size:10px;color:#48484A;">'+m.g+'</span>'
+      +'</div>'
+      +'<div style="font-size:15px;font-weight:700;color:'+col+';">'+fmt(m.target)+' <span style="font-size:9px;color:#48484A;font-weight:400;">kcal</span></div>'
+      +(isAdj?'<div style="font-size:9px;color:#FF9F0A;margin-top:3px;">'+m.targetNote+'</div>':'')
+      +'</div>';
+  }).join('');
+
+  if(adjusted.length>0){
+    document.getElementById('r-targets-note').textContent=
+      '本月 '+adjusted.length+' 人目标有调整（高亮显示），其余均为基础目标。';
+  }
+}
+
+/* ══════════════════════════════════════
+   Layer 2：日报进入 — 月度累计趋势
+══════════════════════════════════════ */
+function showDayMember(i){
+  var m=PF.members[i], col=gc(m.p);
+  _openDetail('day');
+  document.getElementById('detail-content').innerHTML=
+    '<div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;">'
+      +'<div style="flex-shrink:0;">'+ring(m.p,86)+'</div>'
+      +'<div style="flex:1;min-width:0;">'
+        +'<div style="font-size:26px;font-weight:800;line-height:1;">'+m.n+'</div>'
+        +'<div style="font-size:12px;color:#636366;margin-top:3px;">'+m.g+' · 本月目标 '+fmt(m.target)+' kcal</div>'
+        +'<div style="font-size:15px;font-weight:700;color:'+col+';margin-top:6px;">本月完成 '+m.p+'%</div>'
+      +'</div>'
+    +'</div>'
+    +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;">'
+      +'<div style="background:#1C1C1E;border-radius:11px;padding:12px 10px;"><div style="font-size:10px;color:#636366;margin-bottom:4px;">连续打卡</div><div style="font-size:20px;font-weight:700;color:#FF9F0A;">'+m.s+'<span style="font-size:11px;color:#48484A;font-weight:400;">天</span></div></div>'
+      +'<div style="background:#1C1C1E;border-radius:11px;padding:12px 10px;"><div style="font-size:10px;color:#636366;margin-bottom:4px;">今日消耗</div><div style="font-size:20px;font-weight:700;color:#0A84FF;">'+(m.today>0?fmt(m.today):'—')+'</div></div>'
+      +'<div style="background:#1C1C1E;border-radius:11px;padding:12px 10px;"><div style="font-size:10px;color:#636366;margin-bottom:4px;">月累计</div><div style="font-size:20px;font-weight:700;color:'+col+';">'+Math.round(m.monthly/1000*10)/10+'k</div></div>'
+    +'</div>'
+    +'<div style="background:#1C1C1E;border-radius:13px;padding:14px;">'
+      +'<div class="sl" style="margin-bottom:14px;">近7天月度累计趋势</div>'
+      +'<div style="position:relative;height:160px;"><canvas id="dc"></canvas></div>'
+    +'</div>';
+  _destroyCharts();
+  setTimeout(function(){
+    detailChart=new Chart(document.getElementById('dc').getContext('2d'),{
+      type:'line',
+      data:{labels:['4/23','4/24','4/25','4/26','4/27','4/28','4/29'],
+        datasets:[
+          {data:m.h,borderColor:col,backgroundColor:col+'15',fill:true,tension:.42,
+           pointBackgroundColor:col,pointRadius:4,pointHoverRadius:6,borderWidth:2},
+          {data:new Array(7).fill(m.target),borderColor:'#3A3A3C',borderDash:[5,3],
+           pointRadius:0,fill:false,borderWidth:1.5}
+        ]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+        scales:{x:{ticks:{color:'#636366',font:{size:10}},grid:{color:'#2C2C2E'},border:{color:'#2C2C2E'}},
+                y:{ticks:{color:'#636366',font:{size:10}},grid:{color:'#2C2C2E'},border:{color:'#2C2C2E'}}}}
+    });
+  },50);
+}
+
+/* ══════════════════════════════════════
+   Layer 2：月报进入 — 饼图 + 分周柱状
+══════════════════════════════════════ */
+function showMonthMember(i){
+  var m=PF.members[i], col=gc(m.p);
+  _openDetail('month');
+  var chickens=Math.round(m.monthly/290);
+  var colas=Math.round(m.monthly/140);
+  var burgers=Math.round(m.monthly/500);
+  var kgFat=(m.monthly/7700).toFixed(2);
+  var jin=(m.monthly/7700*2).toFixed(1);
+  var progHtml=m.lm>0
+    ?(function(){var pct=Math.round((m.monthly-m.lm)/m.lm*100);
+       return '<span style="color:'+(pct>=0?'#30D158':'#FF2D55')+';font-weight:700;">'+(pct>=0?'↑':'↓')+Math.abs(pct)+'%</span> 环比上月';}())
+    :'首次参与月度打卡';
+  var sportKcals=m.sd.map(function(p){return Math.round(m.monthly*p/100);});
+
+  document.getElementById('detail-content').innerHTML=
+    '<div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;">'
+      +'<div style="flex-shrink:0;">'+ring(m.p,86)+'</div>'
+      +'<div style="flex:1;min-width:0;">'
+        +'<div style="font-size:26px;font-weight:800;line-height:1;">'+m.n+'</div>'
+        +'<div style="font-size:12px;color:#636366;margin-top:3px;">'+m.g+' · 本月目标 '+fmt(m.target)+' kcal'+(m.targetNote?' · <span style="color:#FF9F0A;">'+m.targetNote+'</span>':'')+'</div>'
+        +'<div style="font-size:13px;color:#8E8E93;margin-top:5px;">'+progHtml+'</div>'
+      +'</div>'
+    +'</div>'
+    +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;">'
+      +'<div style="background:#1C1C1E;border-radius:11px;padding:12px 10px;text-align:center;"><div style="font-size:10px;color:#636366;margin-bottom:4px;">月度消耗</div><div style="font-size:16px;font-weight:700;color:'+col+';">'+fmt(m.monthly)+'</div><div style="font-size:9px;color:#48484A;">kcal</div></div>'
+      +'<div style="background:#1C1C1E;border-radius:11px;padding:12px 10px;text-align:center;"><div style="font-size:10px;color:#636366;margin-bottom:4px;">完成率</div><div style="font-size:16px;font-weight:700;color:'+col+';">'+m.p+'%</div><div style="font-size:9px;color:#48484A;">本月目标</div></div>'
+      +'<div style="background:#1C1C1E;border-radius:11px;padding:12px 10px;text-align:center;"><div style="font-size:10px;color:#636366;margin-bottom:4px;">连续打卡</div><div style="font-size:16px;font-weight:700;color:#FF9F0A;">'+m.s+'</div><div style="font-size:9px;color:#48484A;">天</div></div>'
+    +'</div>'
+    +'<div style="background:#1C1C1E;border-radius:13px;padding:14px;margin-bottom:14px;">'
+      +'<div class="sl" style="margin-bottom:12px;">运动等效换算</div>'
+      +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;">'
+        +'<div style="background:#2C2C2E;border-radius:10px;padding:11px 8px;text-align:center;"><div style="font-size:20px;margin-bottom:4px;">🍗</div><div style="font-size:16px;font-weight:700;color:#FF9F0A;">'+chickens+'</div><div style="font-size:9px;color:#636366;margin-top:2px;">个炸鸡腿</div></div>'
+        +'<div style="background:#2C2C2E;border-radius:10px;padding:11px 8px;text-align:center;"><div style="font-size:20px;margin-bottom:4px;">🥤</div><div style="font-size:16px;font-weight:700;color:#0A84FF;">'+colas+'</div><div style="font-size:9px;color:#636366;margin-top:2px;">罐可乐</div></div>'
+        +'<div style="background:#2C2C2E;border-radius:10px;padding:11px 8px;text-align:center;"><div style="font-size:20px;margin-bottom:4px;">🍔</div><div style="font-size:16px;font-weight:700;color:#FF2D55;">'+burgers+'</div><div style="font-size:9px;color:#636366;margin-top:2px;">个汉堡</div></div>'
+      +'</div>'
+      +'<div style="background:#2C2C2E;border-radius:9px;padding:10px 12px;font-size:12px;color:#d4d4d4;line-height:1.75;">'
+        +'这个月的运动让你少胖了 <span style="color:#30D158;font-weight:700;">'+jin+' 斤</span>（约 '+kgFat+' kg 脂肪储存）🎉'
+      +'</div>'
+    +'</div>'
+    +'<div style="background:#1C1C1E;border-radius:13px;padding:14px;margin-bottom:14px;">'
+      +'<div class="sl" style="margin-bottom:12px;">运动类型分布</div>'
+      +'<div style="display:flex;align-items:center;gap:14px;">'
+        +'<div style="flex-shrink:0;width:110px;height:110px;position:relative;"><canvas id="dc-pie"></canvas></div>'
+        +'<div style="flex:1;min-width:0;" id="dc-pie-legend"></div>'
+      +'</div>'
+    +'</div>'
+    +'<div style="background:#1C1C1E;border-radius:13px;padding:14px;">'
+      +'<div class="sl" style="margin-bottom:12px;">本月分周消耗</div>'
+      +'<div style="position:relative;height:140px;"><canvas id="dc-bar"></canvas></div>'
+    +'</div>';
+
+  _destroyCharts();
+  setTimeout(function(){
+    /* 饼图 */
+    detailChart=new Chart(document.getElementById('dc-pie').getContext('2d'),{
+      type:'doughnut',
+      data:{labels:SPORT_LABELS,datasets:[{data:sportKcals,
+        backgroundColor:SPORT_COLORS.map(function(c){return c+'BB';}),
+        borderColor:SPORT_COLORS,borderWidth:1.5,hoverOffset:4}]},
+      options:{responsive:false,cutout:'62%',plugins:{legend:{display:false},
+        tooltip:{callbacks:{label:function(ctx){return ctx.label+': '+ctx.parsed+' kcal';}}}}}
+    });
+    document.getElementById('dc-pie-legend').innerHTML=SPORT_LABELS.map(function(lbl,j){
+      if(!sportKcals[j]) return '';
+      return '<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">'
+        +'<div style="width:8px;height:8px;border-radius:50%;background:'+SPORT_COLORS[j]+';flex-shrink:0;"></div>'
+        +'<div style="flex:1;font-size:11px;color:#d4d4d4;">'+lbl+'</div>'
+        +'<div style="font-size:11px;color:'+SPORT_COLORS[j]+';font-weight:600;">'+m.sd[j]+'%</div>'
+        +'</div>';
+    }).join('');
+
+    /* 分周柱状 */
+    var wkTgt=Math.round(m.target/4.3);
+    detailChart2=new Chart(document.getElementById('dc-bar').getContext('2d'),{
+      type:'bar',
+      data:{labels:['第1周','第2周','第3周','第4周'],
+        datasets:[
+          {data:m.mwk,backgroundColor:col+'55',borderColor:col,borderWidth:1.5,borderRadius:5},
+          {type:'line',data:new Array(4).fill(wkTgt),borderColor:'#3A3A3C',borderDash:[4,3],
+           pointRadius:0,fill:false,borderWidth:1.5}
+        ]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+        scales:{x:{ticks:{color:'#636366',font:{size:10}},grid:{color:'#1C1C1E'},border:{color:'#1C1C1E'}},
+                y:{ticks:{color:'#636366',font:{size:10}},grid:{color:'#2C2C2E'},border:{color:'#2C2C2E'}}}}
+    });
+  },60);
+}
+
+function _openDetail(origin){
+  currentTab=currentTab; // keep
+  TABS.forEach(function(t){document.getElementById('v-'+t.id).style.display='none';});
+  document.getElementById('v-detail').style.display='block';
+  document.getElementById('v-detail').dataset.origin=origin;
+  window.scrollTo(0,0);
+}
+
+function _destroyCharts(){
+  if(detailChart){detailChart.destroy();detailChart=null;}
+  if(detailChart2){detailChart2.destroy();detailChart2=null;}
+}
+
+function backFromDetail(){
+  _destroyCharts();
+  document.getElementById('v-detail').style.display='none';
+  document.getElementById('v-'+currentTab).style.display='block';
+  window.scrollTo(0,0);
+}
+
+/* ══════════════════════════════════════
+   启动
+══════════════════════════════════════ */
+renderDayTab();
+renderRulesTargets();
+</script>
 </body>
 </html>
