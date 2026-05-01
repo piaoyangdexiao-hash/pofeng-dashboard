@@ -2059,7 +2059,16 @@ var Q_PF = {
         8003,
         4322
       ],
-      "awards": []
+      "awards": [
+        {
+          "emoji": "🏆",
+          "title": "本周领风者",
+          "name": "重楼",
+          "note": "本周消耗 2,515.0 kcal",
+          "value": "2,515.0",
+          "color": "#FF9F0A"
+        }
+      ]
     },
     {
       "week": "W15",
@@ -2192,7 +2201,32 @@ var Q_PF = {
         5129,
         3321
       ],
-      "awards": []
+      "awards": [
+        {
+          "emoji": "🏆",
+          "title": "本周领风者",
+          "name": "洵心",
+          "note": "本周消耗 3,361.0 kcal",
+          "value": "3,361.0",
+          "color": "#FF9F0A"
+        },
+        {
+          "emoji": "🚀",
+          "title": "破风新星",
+          "name": "洵心",
+          "note": "上周 1,121.0 → 本周 3,361.0 kcal（+200%）",
+          "value": "+200%",
+          "color": "#30D158"
+        },
+        {
+          "emoji": "⚡",
+          "title": "逆风翻盘",
+          "name": "加宝",
+          "note": "上周 3次 → 本周 5次（+2次）",
+          "value": "+2次",
+          "color": "#FF2D55"
+        }
+      ]
     },
     {
       "week": "W16",
@@ -2319,7 +2353,32 @@ var Q_PF = {
         7010,
         8128
       ],
-      "awards": []
+      "awards": [
+        {
+          "emoji": "🏆",
+          "title": "本周领风者",
+          "name": "加宝",
+          "note": "本周消耗 3,059.0 kcal",
+          "value": "3,059.0",
+          "color": "#FF9F0A"
+        },
+        {
+          "emoji": "🚀",
+          "title": "破风新星",
+          "name": "雷加",
+          "note": "上周 531.0 → 本周 2,252.0 kcal（+324%）",
+          "value": "+324%",
+          "color": "#30D158"
+        },
+        {
+          "emoji": "⚡",
+          "title": "逆风翻盘",
+          "name": "雷加",
+          "note": "上周 1次 → 本周 5次（+4次）",
+          "value": "+4次",
+          "color": "#FF2D55"
+        }
+      ]
     },
     {
       "week": "W17",
@@ -2440,7 +2499,32 @@ var Q_PF = {
         8548,
         7256
       ],
-      "awards": []
+      "awards": [
+        {
+          "emoji": "🏆",
+          "title": "本周领风者",
+          "name": "加宝",
+          "note": "本周消耗 3,568.0 kcal",
+          "value": "3,568.0",
+          "color": "#FF9F0A"
+        },
+        {
+          "emoji": "🚀",
+          "title": "破风新星",
+          "name": "Tarry",
+          "note": "上周 1,413.0 → 本周 2,751.0 kcal（+95%）",
+          "value": "+95%",
+          "color": "#30D158"
+        },
+        {
+          "emoji": "⚡",
+          "title": "逆风翻盘",
+          "name": "福远",
+          "note": "上周 5次 → 本周 6次（+1次）",
+          "value": "+1次",
+          "color": "#FF2D55"
+        }
+      ]
     },
     {
       "week": "W18",
@@ -2503,7 +2587,16 @@ var Q_PF = {
         1544,
         0
       ],
-      "awards": []
+      "awards": [
+        {
+          "emoji": "🏆",
+          "title": "本周领风者",
+          "name": "陈雷",
+          "note": "本周消耗 1,528.0 kcal",
+          "value": "1,528.0",
+          "color": "#FF9F0A"
+        }
+      ]
     }
   ],
   "historyMonths": [
@@ -3096,28 +3189,20 @@ var Q_PF = {
       "未达标": 4,
       "awards": [
         {
-          "emoji": "⭐",
-          "title": "破风之星",
+          "emoji": "🏆",
+          "title": "月度MVP",
           "name": "加宝",
-          "note": "完成度 170%",
-          "value": "170%",
-          "color": "#30D158"
-        },
-        {
-          "emoji": "🔥",
-          "title": "燃烧之星",
-          "name": "加宝",
-          "note": "消耗 11,916 kcal",
+          "note": "月度消耗 11,916 kcal",
           "value": "11,916",
           "color": "#FF9F0A"
         },
         {
-          "emoji": "👑",
-          "title": "月度领风者",
-          "name": "加宝",
-          "note": "团队消耗第一",
-          "value": "#1",
-          "color": "#FF2D55"
+          "emoji": "🚩",
+          "title": "月度全勤奖",
+          "name": "加宝、晓识、杰诚",
+          "note": "本月持续参与训练",
+          "value": "16人",
+          "color": "#0A84FF"
         }
       ],
       "fund": {
@@ -3416,8 +3501,14 @@ function Q_renderWeekTab(){
     +'</div>'
     +'</div>';
 
-  document.getElementById('week-awards').innerHTML =
-    '<div class="sl">本周荣耀</div>'+Q_PF.weekAwards.map(Q_awardRow).join('');
+  /* 本周荣耀 */
+  if(Q_PF.weekAwards && Q_PF.weekAwards.length > 0) {
+    document.getElementById('week-awards').style.display = 'block';
+    document.getElementById('week-awards').innerHTML =
+      '<div class="sl">本周荣耀</div>'+Q_PF.weekAwards.map(Q_awardRow).join('');
+  } else {
+    document.getElementById('week-awards').style.display = 'none';
+  }
 
   /* 图表 */
   if(Q_weekChart) Q_weekChart.destroy();
