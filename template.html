@@ -62,10 +62,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Ne
     <div class="sl">本周成员明细</div>
     <div id="week-members"></div>
   </div>
-  <div style="background:#1C1C1E;border-radius:13px;padding:14px;margin-bottom:11px;">
-    <div class="sl">历史各周领风者</div>
-    <div id="week-champs"></div>
-  </div>
   <div style="background:#1C1C1E;border-radius:13px;padding:14px;">
     <div class="sl">历史周报 · 点击查看详情</div>
     <div id="week-history-list"></div>
@@ -77,10 +73,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Ne
   <div id="month-selector" class="hpick"></div>
   <div id="month-header"></div>
   <div id="month-overview" style="margin-bottom:11px;"></div>
-  <div id="month-team-calendar" style="background:#1C1C1E;border-radius:13px;padding:14px;margin-bottom:11px;"></div>
   <div id="month-awards" style="background:#1C1C1E;border-radius:13px;padding:14px;margin-bottom:11px;"></div>
   <div class="sl">全员月度群像 · 点击查看个人详情</div>
-  <div id="month-group" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:11px;"></div>
+  <div id="month-group" style="margin-bottom:11px;"></div>
+  <div id="month-team-calendar" style="background:#1C1C1E;border-radius:13px;padding:14px;margin-bottom:11px;"></div>
   <div id="month-fund"></div>
 </div>
 
@@ -1048,14 +1044,10 @@ function renderWeekTab(){
       +'<div style="font-size:10px;color:#48484A;width:16px;text-align:right;">'+m.wd+'天</div></div>';
   }).join('');
 
-  document.getElementById('week-champs').innerHTML=PF.weekChamps.map(function(c){
-    return '<div class="aw" style="'+(c.cur?'background:#FF9F0A18;border-radius:8px;padding:8px 6px;':'padding:6px 0;')+'">'
-      +'<div style="flex:1;"><div style="font-size:10px;color:#636366;">'+c.w+(c.cur?' · 进行中':'')+'</div>'
-      +'<div style="font-size:13px;font-weight:600;margin-top:2px;">'+c.n+'</div></div>'
-      +'<div style="font-size:13px;font-weight:700;color:'+(c.cur?'#FF9F0A':'#30D158')+';">'+fmt(c.k)+' kcal</div></div>';
-  }).join('');
-
-  document.getElementById('week-history-list').innerHTML=PF.historyWeeks.map(function(wk,i){
+  /* 历史周报：时间倒序（最新周在前） */
+  var hwLen=PF.historyWeeks.length;
+  document.getElementById('week-history-list').innerHTML=PF.historyWeeks.slice().reverse().map(function(wk,ri){
+    var i=hwLen-1-ri; /* 原始索引，用于详情页跳转 */
     return '<div class="mc aw" onclick="showHistWeekDetail('+i+')">'
       +'<div style="flex:1;"><div style="font-size:12px;font-weight:600;">'+wk.w+'</div>'
       +'<div style="font-size:10px;color:#636366;margin-top:2px;">团队 '+fmt(wk.total)+' kcal · 领风: '+wk.hero.name+' '+fmt(wk.hero.k)+'</div></div>'
@@ -1092,13 +1084,15 @@ function showHistWeekDetail(idx){
       var bar=Math.round(Math.min(m.wk/(maxWkRow||1),1)*100);
       var trend=m.wk>m.lw?'↑':m.wk<m.lw?'↓':'–';
       var tcol=m.wk>m.lw?'#30D158':m.wk<m.lw?'#FF2D55':'#636366';
-      return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:0.5px solid #2C2C2E;">'
+      return '<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:0.5px solid #2C2C2E;">'
         +'<div style="font-size:13px;font-weight:600;width:32px;flex-shrink:0;">'+m.n+'</div>'
-        +'<div style="flex:1;"><div style="background:#0A84FF20;border-radius:3px;height:6px;">'
-        +'<div style="background:#0A84FF;height:100%;width:'+bar+'%;border-radius:3px;"></div></div></div>'
-        +'<div style="font-size:11px;color:#636366;width:55px;text-align:right;">'+fmt(m.wk)+'</div>'
-        +'<div style="font-size:11px;color:'+tcol+';width:20px;text-align:right;font-weight:600;">'+trend+'</div>'
-        +'<div style="font-size:10px;color:#48484A;width:16px;text-align:right;">'+m.wd+'天</div></div>';
+        +'<div style="flex:1;">'
+        +'<div style="background:#0A84FF20;border-radius:3px;height:5px;margin-bottom:3px;">'
+        +'<div style="background:#0A84FF;height:100%;width:'+bar+'%;border-radius:3px;"></div></div>'
+        +(m.sp?'<div style="font-size:9px;color:#636366;">'+m.sp+(m.wd?' · '+m.wd+'天':'')+'</div>':'')
+        +'</div>'
+        +'<div style="font-size:11px;color:#fff;font-weight:600;width:52px;text-align:right;">'+fmt(m.wk)+'</div>'
+        +'<div style="font-size:11px;color:'+tcol+';width:16px;text-align:right;font-weight:700;">'+trend+'</div></div>';
     }).join('')+'</div>';
 
   TABS.forEach(function(t){document.getElementById('v-'+t.id).style.display='none';});
@@ -1146,65 +1140,57 @@ function renderMonthContent(idx){
     +'<div style="background:#1C1C1E;border-radius:11px;padding:12px 10px;"><div style="font-size:10px;color:#636366;margin-bottom:4px;">团队人均</div>'
     +'<div style="font-size:18px;font-weight:700;color:#0A84FF;">'+fmt(Math.round(mo.total/16))+'</div></div></div>';
 
-  /* ── M5: 团队打卡日历 ── */
-  document.getElementById('month-team-calendar').innerHTML=_teamCalHtml(mo);
-
-  /* ── 月度荣誉 + 月度排行榜（对齐日 Tab 风格） ── */
+  /* ── 月度荣誉（仅 awards，不含排行） ── */
   var mRanked=mo.rows.slice().sort(function(a,b){return b.p-a.p;});
-  var awardsHtml='<div class="sl">月度荣誉</div>'+mo.awards.map(awardRow).join('');
-  awardsHtml+='<div class="sl" style="margin-top:14px;">月度排行</div>';
-  /* No.1 */
+  document.getElementById('month-awards').innerHTML=
+    '<div class="sl">月度荣誉</div>'+(mo.awards&&mo.awards.length?mo.awards.map(awardRow).join(''):'<div style="font-size:12px;color:#636366;">暂无荣誉记录</div>');
+
+  /* ── 全员月度群像（日Tab大中小卡样式，按 p% 排序） ── */
+  var grpHtml='';
+  /* No.1 大卡 */
   if(mRanked[0]){
     var r1=mRanked[0],r1i=mo.rows.indexOf(mRanked[0]);
-    awardsHtml+='<div onclick="showHistMonthMember('+idx+','+r1i+')" style="cursor:pointer;background:#1C1C1E;border-radius:13px;padding:14px;display:flex;align-items:center;gap:12px;margin-bottom:8px;">'
+    var r1col=gc(r1.p);
+    grpHtml+='<div onclick="showHistMonthMember('+idx+','+r1i+')" style="cursor:pointer;background:#1C1C1E;border-radius:13px;padding:14px;display:flex;align-items:center;gap:12px;margin-bottom:8px;">'
       +'<div style="font-size:28px;">🥇</div><div style="flex:1;">'
       +'<div style="font-size:17px;font-weight:700;">'+r1.n+'</div>'
-      +'<div style="font-size:11px;color:#636366;margin-top:2px;">'+fmt(r1.monthly)+' kcal</div></div>'
+      +'<div style="font-size:11px;color:#636366;margin-top:2px;">'+fmt(r1.monthly)+' kcal'+(r1.targetNote?' · <span style="color:#FF9F0A;">'+r1.targetNote+'</span>':'')+'</div></div>'
       +'<div>'+ring(r1.p,52)+'</div></div>';
   }
-  /* No.2 & No.3 */
+  /* No.2 & 3 中卡 */
   if(mRanked[1]||mRanked[2]){
-    awardsHtml+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">';
+    grpHtml+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">';
     [1,2].forEach(function(rank){
       if(mRanked[rank]){
-        var m=mRanked[rank],mi=mo.rows.indexOf(mRanked[rank]),medal=rank===1?'🥈':'🥉';
-        awardsHtml+='<div onclick="showHistMonthMember('+idx+','+mi+')" style="cursor:pointer;background:#1C1C1E;border-radius:11px;padding:12px;display:flex;align-items:center;gap:8px;">'
+        var m=mRanked[rank],mi=mo.rows.indexOf(m),medal=rank===1?'🥈':'🥉';
+        grpHtml+='<div onclick="showHistMonthMember('+idx+','+mi+')" style="cursor:pointer;background:#1C1C1E;border-radius:11px;padding:12px;display:flex;align-items:center;gap:8px;">'
           +'<span style="font-size:20px;">'+medal+'</span><div style="flex:1;min-width:0;">'
           +'<div style="font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+m.n+'</div>'
-          +'<div style="font-size:10px;color:#636366;margin-top:2px;">'+fmt(m.monthly)+' kcal</div></div>'
-          +'<div>'+ring(m.p,40)+'</div></div>';
+          +'<div style="font-size:10px;color:#636366;margin-top:2px;">'+fmt(m.monthly)+' kcal</div>'
+          +(m.targetNote?'<div style="font-size:9px;color:#FF9F0A;margin-top:1px;">'+m.targetNote+'</div>':'')
+          +'</div><div>'+ring(m.p,40)+'</div></div>';
       }
     });
-    awardsHtml+='</div>';
+    grpHtml+='</div>';
   }
-  /* No.4–6 */
+  /* No.4+ 小卡（4列） */
   if(mRanked.length>3){
-    awardsHtml+='<div style="font-size:11px;color:#636366;margin-bottom:6px;">第4–6位</div>';
-    awardsHtml+='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;">';
-    mRanked.slice(3,6).forEach(function(m){
+    grpHtml+='<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;">';
+    mRanked.slice(3).forEach(function(m){
       var mi=mo.rows.indexOf(m);
-      awardsHtml+='<div onclick="showHistMonthMember('+idx+','+mi+')" style="cursor:pointer;background:#1C1C1E;border-radius:11px;padding:10px 8px;text-align:center;">'
-        +'<div style="font-size:12px;font-weight:600;margin-bottom:4px;">'+m.n+'</div>'
-        +'<div style="font-size:10px;color:#636366;margin-bottom:4px;">'+fmt(m.monthly)+'</div>'
-        +'<div>'+ring(m.p,38)+'</div></div>';
+      grpHtml+='<div onclick="showHistMonthMember('+idx+','+mi+')" style="cursor:pointer;background:#1C1C1E;border-radius:11px;padding:10px 6px;text-align:center;">'
+        +'<div style="font-size:12px;font-weight:600;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+m.n+'</div>'
+        +'<div style="font-size:9px;color:#636366;margin-bottom:5px;">'+fmt(m.monthly)+'</div>'
+        +'<div style="display:flex;justify-content:center;">'+ring(m.p,36)+'</div>'
+        +(m.targetNote?'<div style="font-size:8px;color:#FF9F0A;margin-top:3px;">'+m.targetNote+'</div>':'')
+        +'</div>';
     });
-    awardsHtml+='</div>';
+    grpHtml+='</div>';
   }
-  document.getElementById('month-awards').innerHTML=awardsHtml;
+  document.getElementById('month-group').innerHTML=grpHtml;
 
-  var sorted=mRanked;
-  document.getElementById('month-group').innerHTML=sorted.map(function(m){
-    var origIdx=mo.rows.indexOf(m);
-    return '<div class="mc" onclick="showHistMonthMember('+idx+','+origIdx+')"'
-      +' style="background:#1C1C1E;border-radius:13px;padding:12px;">'
-      +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">'
-      +'<div style="font-size:14px;font-weight:600;flex:1;">'+m.n+'</div>'
-      +'<div style="font-size:10px;color:#636366;">'+m.g+'</div></div>'
-      +'<div style="display:flex;align-items:center;gap:8px;"><div>'+ring(m.p,44)+'</div>'
-      +'<div style="flex:1;"><div style="font-size:10px;color:#636366;">'+fmt(m.monthly)+' kcal</div>'
-      +(m.targetNote?'<div style="font-size:9px;color:#FF9F0A;margin-top:2px;">'+m.targetNote+'</div>':'')
-      +'</div></div></div>';
-  }).join('');
+  /* ── M5: 团队打卡日历（在破风基金之上） ── */
+  document.getElementById('month-team-calendar').innerHTML=_teamCalHtml(mo);
 
   var f=mo.fund;
   document.getElementById('month-fund').innerHTML=
@@ -1345,12 +1331,30 @@ function _teamCalHtml(mo){
 function showTCPopup(dt,total,count){
   var ex=document.getElementById('tc-popup');if(ex)ex.remove();
   var p=document.createElement('div');p.id='tc-popup';
-  p.style.cssText='position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:#2C2C2E;border-radius:14px;padding:16px 20px;z-index:9999;min-width:160px;box-shadow:0 6px 30px rgba(0,0,0,.6);text-align:center;';
+  p.style.cssText='position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:#2C2C2E;border-radius:14px;padding:16px 18px;z-index:9999;min-width:260px;max-width:320px;max-height:78vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.7);';
   var mo=dt.slice(5,7),dd=parseInt(dt.slice(8,10));
-  p.innerHTML='<div style="font-size:11px;color:#8E8E93;margin-bottom:6px;">'+parseInt(mo)+'月'+dd+'日 · 团队</div>'
-    +'<div style="font-size:22px;font-weight:800;color:#0A84FF;margin-bottom:4px;">'+fmt(total)+' kcal</div>'
-    +'<div style="font-size:12px;color:#A0A0A5;margin-bottom:10px;">'+count+' 人打卡</div>'
-    +'<div onclick="document.getElementById(\'tc-popup\').remove()" style="font-size:11px;color:#636366;cursor:pointer;padding:4px;">关闭</div>';
+  /* 从 memberCalendar 获取当日成员明细，按 kcal 降序 */
+  var members=[];
+  if(PF.memberCalendar){
+    Object.keys(PF.memberCalendar).forEach(function(name){
+      (PF.memberCalendar[name]||[]).forEach(function(e){
+        if(e.dt===dt&&e.k>0) members.push({n:name,k:e.k,sp:e.sp||''});
+      });
+    });
+    members.sort(function(a,b){return b.k-a.k;});
+  }
+  var memberRows=members.map(function(m,i){
+    return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;'+(i<members.length-1?'border-bottom:0.5px solid #3A3A3C;':'')+'">'
+      +'<div style="font-size:12px;font-weight:700;width:32px;flex-shrink:0;color:#fff;">'+m.n+'</div>'
+      +'<div style="flex:1;font-size:10px;color:#8E8E93;">'+m.sp+'</div>'
+      +'<div style="font-size:12px;font-weight:600;color:#FF2D55;">'+fmt(m.k)+'</div></div>';
+  }).join('');
+  p.innerHTML='<div style="text-align:center;margin-bottom:10px;">'
+    +'<div style="font-size:11px;color:#8E8E93;margin-bottom:4px;">'+parseInt(mo)+'月'+dd+'日 · 团队</div>'
+    +'<div style="font-size:24px;font-weight:800;color:#0A84FF;">'+fmt(total)+' kcal</div>'
+    +'<div style="font-size:12px;color:#636366;margin-top:2px;">'+count+' 人打卡 · '+members.length+' 条记录</div></div>'
+    +(memberRows?'<div style="border-top:0.5px solid #3A3A3C;padding-top:6px;">'+memberRows+'</div>':'')
+    +'<div onclick="document.getElementById(\'tc-popup\').remove()" style="text-align:center;font-size:11px;color:#636366;cursor:pointer;padding:10px 4px 2px;">关闭</div>';
   document.body.appendChild(p);
 }
 
