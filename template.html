@@ -675,11 +675,18 @@ var SPORT_COLORS = ['#0A84FF','#FF2D55','#30D158','#FF9F0A'];
   /* ── historyWeeks ── */
   (PF.historyWeeks||[]).forEach(function(wk){
     if(!wk.w)          wk.w          = wk.weekLabel||wk.label||'';
+    if(!wk.awards)     wk.awards     = [];
     if(wk.hero){
       if(wk.hero.wd===undefined) wk.hero.wd = wk.hero.days||0;
       if(wk.hero.k===undefined)  wk.hero.k  = wk.hero.weekKcal||0;
+      if(!wk.hero.sport)         wk.hero.sport = wk.hero.sp||'';
     }
     if(!wk.rows) wk.rows = wk.members||[];
+    /* Q 可能用 k 代替 wk，lw 可能缺失 */
+    wk.rows.forEach(function(r){
+      if(r.wk===undefined) r.wk = r.k||0;
+      if(r.lw===undefined) r.lw = 0;
+    });
   });
 })();
 /* ── 世界名言语录库（按日期哈希每天固定一条） ── */
@@ -832,9 +839,16 @@ var QUOTES=[
   {t:"真的猛士，敢于直面惨淡的人生，敢于正视淋漓的鲜血。",by:"鲁迅",from:"《纪念刘和珍君》"},
   {t:"其实地上本没有路，走的人多了，也便成了路。",by:"鲁迅",from:"《故乡》"},
 ];
-function getDailyQuote(){
-  var d=new Date();
-  var seed=d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate();
+function getDailyQuote(dateStr){
+  var seed;
+  if(dateStr){
+    /* 传入 "YYYY-MM-DD" 字符串，用该天日期作种子 */
+    var pts=dateStr.replace(/-/g,'');
+    seed=parseInt(pts,10)||0;
+  } else {
+    var d=new Date();
+    seed=d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate();
+  }
   return QUOTES[seed%QUOTES.length];
 }
 var TABS = [
@@ -967,7 +981,7 @@ function renderDayContent(idx){
   } else {lbl.style.display='none';r4.innerHTML='';}
 
   if(unchecked.length>0){
-    var q=getDailyQuote();
+    var q=getDailyQuote(d.dt);
     document.getElementById('day-unchecked-card').innerHTML=
       '<div style="background:#1C1C1E;border-radius:13px;padding:14px;">'
       +'<div class="sl">今日未打卡 · '+unchecked.length+'人</div>'
