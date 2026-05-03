@@ -7027,9 +7027,15 @@ var QUOTES=[
   {t:"真的猛士，敢于直面惨淡的人生，敢于正视淋漓的鲜血。",by:"鲁迅",from:"《纪念刘和珍君》"},
   {t:"其实地上本没有路，走的人多了，也便成了路。",by:"鲁迅",from:"《故乡》"},
 ];
-function getDailyQuote(){
-  var d=new Date();
-  var seed=d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate();
+function getDailyQuote(dateStr){
+  var seed;
+  if(dateStr){
+    var pts=dateStr.replace(/-/g,'');
+    seed=parseInt(pts,10)||0;
+  } else {
+    var d=new Date();
+    seed=d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate();
+  }
   return QUOTES[seed%QUOTES.length];
 }
 var TABS = [
@@ -7162,7 +7168,7 @@ function renderDayContent(idx){
   } else {lbl.style.display='none';r4.innerHTML='';}
 
   if(unchecked.length>0){
-    var q=getDailyQuote();
+    var q=getDailyQuote(d.dt||d.date);
     document.getElementById('day-unchecked-card').innerHTML=
       '<div style="background:#1C1C1E;border-radius:13px;padding:14px;">'
       +'<div class="sl">今日未打卡 · '+unchecked.length+'人</div>'
