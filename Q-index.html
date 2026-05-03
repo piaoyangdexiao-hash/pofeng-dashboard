@@ -77,6 +77,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Ne
   <div id="month-selector" class="hpick"></div>
   <div id="month-header"></div>
   <div id="month-overview" style="margin-bottom:11px;"></div>
+  <div id="month-team-calendar" style="background:#1C1C1E;border-radius:13px;padding:14px;margin-bottom:11px;"></div>
   <div id="month-awards" style="background:#1C1C1E;border-radius:13px;padding:14px;margin-bottom:11px;"></div>
   <div class="sl">全员月度群像 · 点击查看个人详情</div>
   <div id="month-group" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:11px;"></div>
@@ -4188,6 +4189,49 @@ var PF = {
 <script>
 var SPORT_LABELS = ['跑步','力量训练','瑜伽/拉伸','骑行'];
 var SPORT_COLORS = ['#0A84FF','#FF2D55','#30D158','#FF9F0A'];
+
+/* ════════════════════════════════════════
+   PF 兼容层：将 Q 的字段名映射到模板期望的字段名
+   Q 更新字段名后此层可逐步移除
+════════════════════════════════════════ */
+(function normalizePF(){
+  var DOW=['周日','周一','周二','周三','周四','周五','周六'];
+
+  /* ── historyDays ── */
+  (PF.historyDays||[]).forEach(function(d){
+    if(!d.d)               d.d       = d.label||'';
+    if(!d.dw && d.date)   {var dt=new Date(d.date); d.dw=DOW[dt.getDay()];}
+    if(d.checked===undefined) d.checked = d.checkInCount!==undefined ? d.checkInCount : (d.count||0);
+    if(d.avg===undefined)     d.avg     = d.avgKcal||0;
+    /* 合并 ranked + unchecked → rows */
+    if(!d.rows){
+      var rows=[];
+      (d.ranked||[]).forEach(function(r){
+        rows.push({n:r.n||r.name||'', k:r.k!==undefined?r.k:(r.today||0),
+                   sp:r.sp||r.sport||'', p:r.p||0, idx:r.idx!==undefined?r.idx:-1});
+      });
+      (d.unchecked||[]).forEach(function(u){
+        rows.push({n:typeof u==='string'?u:(u.n||u.name||''), k:0, sp:'', p:0, idx:-1});
+      });
+      d.rows=rows;
+    }
+  });
+
+  /* ── historyMonths ── */
+  (PF.historyMonths||[]).forEach(function(mo){
+    if(!mo.m) mo.m = mo.month||'';
+  });
+
+  /* ── historyWeeks ── */
+  (PF.historyWeeks||[]).forEach(function(wk){
+    if(!wk.w)          wk.w          = wk.weekLabel||wk.label||'';
+    if(wk.hero){
+      if(wk.hero.wd===undefined) wk.hero.wd = wk.hero.days||0;
+      if(wk.hero.k===undefined)  wk.hero.k  = wk.hero.weekKcal||0;
+    }
+    if(!wk.rows) wk.rows = wk.members||[];
+  });
+})();
 /* ── 世界名言语录库（按日期哈希每天固定一条） ── */
 var QUOTES=[
   /* === 教父 The Godfather === */
@@ -4646,6 +4690,9 @@ function renderMonthContent(idx){
     +'<div style="background:#1C1C1E;border-radius:11px;padding:12px 10px;"><div style="font-size:10px;color:#636366;margin-bottom:4px;">团队人均</div>'
     +'<div style="font-size:18px;font-weight:700;color:#0A84FF;">'+fmt(Math.round(mo.total/16))+'</div></div></div>';
 
+  /* ── M5: 团队打卡日历 ── */
+  document.getElementById('month-team-calendar').innerHTML=_teamCalHtml(mo);
+
   /* ── 月度荣誉 + 月度排行榜（对齐日 Tab 风格） ── */
   var mRanked=mo.rows.slice().sort(function(a,b){return b.p-a.p;});
   var awardsHtml='<div class="sl">月度荣誉</div>'+mo.awards.map(awardRow).join('');
@@ -4731,6 +4778,126 @@ function showDayMember(i){
   _openCurrentMemberDetail(m,'day');
 }
 
+/* ── M4: 月历打卡热图（成员详情） ── */
+function _memberCalHtml(memberName, singleMonth){
+  var entries=(PF.memberCalendar&&PF.memberCalendar[memberName])||[];
+  var lookup={};
+  entries.forEach(function(e){lookup[e.dt]=e;});
+  var months=[];
+  if(singleMonth){
+    months.push(singleMonth);
+  } else {
+    if(PF.historyMonths&&PF.historyMonths.length>0) months.push(PF.historyMonths[0].m);
+    var td=new Date();
+    months.push(td.getFullYear()+'年'+(td.getMonth()+1)+'月');
+  }
+  var defIdx=months.length-1;
+
+  function oneMonthGrid(mLabel,idx){
+    var pts=mLabel.match(/(\d+)年(\d+)月/);
+    if(!pts) return '';
+    var yr=parseInt(pts[1]),mo=parseInt(pts[2]);
+    var dim=new Date(yr,mo,0).getDate();
+    var fdow=(new Date(yr,mo-1,1).getDay()+6)%7;
+    var prefix=yr+'-'+(mo<10?'0':'')+mo+'-';
+    var maxK=0;
+    for(var d=1;d<=dim;d++){var dt=prefix+(d<10?'0':'')+d;if(lookup[dt])maxK=Math.max(maxK,lookup[dt].k);}
+    if(maxK<300)maxK=300;
+    var cells='';
+    for(var e=0;e<fdow;e++)cells+='<div></div>';
+    for(var d2=1;d2<=dim;d2++){
+      var dt2=prefix+(d2<10?'0':'')+d2;
+      var en=lookup[dt2],k=en?en.k:0,sp=en?en.sp:'';
+      var alpha=k>0?(0.25+0.75*Math.min(k/maxK,1)).toFixed(2):0;
+      var bg=k>0?'rgba(255,45,85,'+alpha+')':'#2C2C2E';
+      var fg=k>0?'#fff':'#4A4A4E';
+      var oc=k>0?' onclick="showMCPopup(\''+dt2+'\','+k+',\''+sp.replace(/'/g,'\\\'')+'\')"':'';
+      cells+='<div style="aspect-ratio:1;border-radius:5px;background:'+bg+';display:flex;align-items:center;justify-content:center;font-size:9px;color:'+fg+';cursor:'+(k>0?'pointer':'default')+';"'+oc+'>'+d2+'</div>';
+    }
+    return '<div id="mcal-'+idx+'" style="display:'+(idx===defIdx?'block':'none')+';">'
+      +'<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px;">'
+      +['一','二','三','四','五','六','日'].map(function(w){return '<div style="text-align:center;font-size:8px;color:#636366;">'+w+'</div>';}).join('')
+      +'</div>'
+      +'<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;">'+cells+'</div>'
+      +'</div>';
+  }
+
+  var tabHtml='';
+  if(months.length>1){
+    tabHtml='<div style="display:flex;gap:5px;margin-bottom:8px;">'
+      +months.map(function(m,i){
+        return '<div onclick="_mcalTab('+i+')" id="mctab-'+i+'" style="flex:1;text-align:center;padding:4px 0;border-radius:7px;font-size:10px;cursor:pointer;'
+          +(i===defIdx?'background:#FF2D55;color:#fff;font-weight:600;':'background:#3A3A3C;color:#8E8E93;')+'">'+m+'</div>';
+      }).join('')+'</div>';
+  }
+  var gridHtml=months.map(function(m,i){return oneMonthGrid(m,i);}).join('');
+  return '<div style="background:#1C1C1E;border-radius:13px;padding:14px;margin-top:11px;">'
+    +'<div class="sl">月度打卡记录</div>'+tabHtml+gridHtml+'</div>';
+}
+
+function _mcalTab(idx){
+  var tabs=document.querySelectorAll('[id^="mctab-"]');
+  var grids=document.querySelectorAll('[id^="mcal-"]');
+  tabs.forEach(function(t,i){t.style.background=i===idx?'#FF2D55':'#3A3A3C';t.style.color=i===idx?'#fff':'#8E8E93';t.style.fontWeight=i===idx?'600':'400';});
+  grids.forEach(function(g,i){g.style.display=i===idx?'block':'none';});
+}
+
+function showMCPopup(dt,k,sp){
+  var ex=document.getElementById('mc-popup');if(ex)ex.remove();
+  var p=document.createElement('div');p.id='mc-popup';
+  p.style.cssText='position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:#2C2C2E;border-radius:14px;padding:16px 20px;z-index:9999;min-width:160px;box-shadow:0 6px 30px rgba(0,0,0,.6);text-align:center;';
+  var mo=dt.slice(5,7),dd=parseInt(dt.slice(8,10));
+  p.innerHTML='<div style="font-size:11px;color:#8E8E93;margin-bottom:6px;">'+parseInt(mo)+'月'+dd+'日</div>'
+    +'<div style="font-size:22px;font-weight:800;color:#FF2D55;margin-bottom:4px;">'+fmt(k)+' kcal</div>'
+    +'<div style="font-size:12px;color:#A0A0A5;margin-bottom:10px;">'+sp+'</div>'
+    +'<div onclick="document.getElementById(\'mc-popup\').remove()" style="font-size:11px;color:#636366;cursor:pointer;padding:4px;">关闭</div>';
+  document.body.appendChild(p);
+}
+
+/* ── M5: 团队月历热图 ── */
+function _teamCalHtml(mo){
+  var tc=PF.teamCalendar||[];
+  var pts=mo.m.match(/(\d+)年(\d+)月/);
+  if(!pts)return '';
+  var yr=parseInt(pts[1]),mon=parseInt(pts[2]);
+  var prefix=yr+'-'+(mon<10?'0':'')+mon+'-';
+  var lookup={};
+  tc.forEach(function(e){if(e.dt)lookup[e.dt]=e;});
+  var dim=new Date(yr,mon,0).getDate();
+  var fdow=(new Date(yr,mon-1,1).getDay()+6)%7;
+  var maxT=0;
+  for(var d=1;d<=dim;d++){var dt=prefix+(d<10?'0':'')+d;if(lookup[dt])maxT=Math.max(maxT,lookup[dt].total||0);}
+  if(maxT<3000)maxT=8000;
+  var cells='';
+  for(var e=0;e<fdow;e++)cells+='<div></div>';
+  for(var d2=1;d2<=dim;d2++){
+    var dt2=prefix+(d2<10?'0':'')+d2;
+    var en=lookup[dt2],tot=en?(en.total||0):0,cnt=en?(en.count||0):0;
+    var alpha=tot>0?(0.2+0.8*Math.min(tot/maxT,1)).toFixed(2):0;
+    var bg=tot>0?'rgba(10,132,255,'+alpha+')':'#2C2C2E';
+    var fg=tot>0?'#fff':'#4A4A4E';
+    var oc=tot>0?' onclick="showTCPopup(\''+dt2+'\','+tot+','+cnt+')"':'';
+    cells+='<div style="aspect-ratio:1;border-radius:5px;background:'+bg+';display:flex;align-items:center;justify-content:center;font-size:9px;color:'+fg+';cursor:'+(tot>0?'pointer':'default')+';"'+oc+'>'+d2+'</div>';
+  }
+  return '<div class="sl">团队打卡日历</div>'
+    +'<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px;">'
+    +['一','二','三','四','五','六','日'].map(function(w){return '<div style="text-align:center;font-size:8px;color:#636366;">'+w+'</div>';}).join('')
+    +'</div>'
+    +'<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;">'+cells+'</div>';
+}
+
+function showTCPopup(dt,total,count){
+  var ex=document.getElementById('tc-popup');if(ex)ex.remove();
+  var p=document.createElement('div');p.id='tc-popup';
+  p.style.cssText='position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:#2C2C2E;border-radius:14px;padding:16px 20px;z-index:9999;min-width:160px;box-shadow:0 6px 30px rgba(0,0,0,.6);text-align:center;';
+  var mo=dt.slice(5,7),dd=parseInt(dt.slice(8,10));
+  p.innerHTML='<div style="font-size:11px;color:#8E8E93;margin-bottom:6px;">'+parseInt(mo)+'月'+dd+'日 · 团队</div>'
+    +'<div style="font-size:22px;font-weight:800;color:#0A84FF;margin-bottom:4px;">'+fmt(total)+' kcal</div>'
+    +'<div style="font-size:12px;color:#A0A0A5;margin-bottom:10px;">'+count+' 人打卡</div>'
+    +'<div onclick="document.getElementById(\'tc-popup\').remove()" style="font-size:11px;color:#636366;cursor:pointer;padding:4px;">关闭</div>';
+  document.body.appendChild(p);
+}
+
 function _openCurrentMemberDetail(m,origin){
   if(detailChart){detailChart.destroy();detailChart=null;}
   if(detailChart2){detailChart2.destroy();detailChart2=null;}
@@ -4757,23 +4924,16 @@ function _openCurrentMemberDetail(m,origin){
     +'<div style="background:#1C1C1E;border-radius:13px;padding:14px;margin-bottom:11px;">'
     +'<div class="sl">运动类型分布</div>'
     +'<div style="position:relative;height:140px;"><canvas id="det-doughnut"></canvas></div></div>'
-    +'<div style="background:#1C1C1E;border-radius:13px;padding:14px;">'
-    +'<div class="sl">近7日累计趋势</div>'
-    +'<div style="position:relative;height:120px;"><canvas id="det-line"></canvas></div></div>';
+    +_memberCalHtml(m.n);
   TABS.forEach(function(t){document.getElementById('v-'+t.id).style.display='none';});
   document.getElementById('v-detail').style.display='block';
   window.scrollTo(0,0);
   setTimeout(function(){
-    var e1=document.getElementById('det-doughnut'),e2=document.getElementById('det-line');
-    if(!e1||!e2) return;
+    var e1=document.getElementById('det-doughnut');
+    if(!e1) return;
     detailChart=new Chart(e1.getContext('2d'),{type:'doughnut',
       data:{labels:SPORT_LABELS,datasets:[{data:m.sd,backgroundColor:SPORT_COLORS,borderWidth:0}]},
       options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{color:'#8E8E93',font:{size:10},boxWidth:10,padding:8}}}}});
-    detailChart2=new Chart(e2.getContext('2d'),{type:'line',
-      data:{labels:PF.trendDates,datasets:[{data:m.h,borderColor:pcol,backgroundColor:pcol+'20',fill:true,tension:.35,pointRadius:3,pointBackgroundColor:pcol,borderWidth:2}]},
-      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
-        scales:{x:{ticks:{color:'#636366',font:{size:9}},grid:{color:'#2C2C2E'}},
-                y:{ticks:{color:'#636366',font:{size:9},callback:function(v){return Math.round(v/1000)+'k';}},grid:{color:'#2C2C2E'}}}}});
   },60);
 }
 
@@ -4805,23 +4965,16 @@ function showHistMonthMember(monthIdx,rowIdx){
     +'<div style="background:#1C1C1E;border-radius:13px;padding:14px;margin-bottom:11px;">'
     +'<div class="sl">运动类型分布</div>'
     +'<div style="position:relative;height:140px;"><canvas id="det-doughnut"></canvas></div></div>'
-    +'<div style="background:#1C1C1E;border-radius:13px;padding:14px;">'
-    +'<div class="sl">分周消耗明细</div>'
-    +'<div style="position:relative;height:120px;"><canvas id="det-bar"></canvas></div></div>';
+    +_memberCalHtml(m.n,mo.m);
   TABS.forEach(function(t){document.getElementById('v-'+t.id).style.display='none';});
   document.getElementById('v-detail').style.display='block';
   window.scrollTo(0,0);
   setTimeout(function(){
-    var e1=document.getElementById('det-doughnut'),e2=document.getElementById('det-bar');
-    if(!e1||!e2) return;
+    var e1=document.getElementById('det-doughnut');
+    if(!e1) return;
     detailChart=new Chart(e1.getContext('2d'),{type:'doughnut',
       data:{labels:SPORT_LABELS,datasets:[{data:m.sd,backgroundColor:SPORT_COLORS,borderWidth:0}]},
       options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{color:'#8E8E93',font:{size:10},boxWidth:10,padding:8}}}}});
-    detailChart2=new Chart(e2.getContext('2d'),{type:'bar',
-      data:{labels:['W1','W2','W3','W4'],datasets:[{data:m.mwk,backgroundColor:pcol+'60',borderColor:pcol,borderWidth:1.5,borderRadius:4}]},
-      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
-        scales:{x:{ticks:{color:'#636366',font:{size:9}},grid:{color:'#2C2C2E'}},
-                y:{ticks:{color:'#636366',font:{size:9},callback:function(v){return Math.round(v/1000)+'k';}},grid:{color:'#2C2C2E'}}}}});
   },60);
 }
 
