@@ -1054,9 +1054,50 @@ function renderMonthContent(idx){
     +'<div style="background:#1C1C1E;border-radius:11px;padding:12px 10px;"><div style="font-size:10px;color:#636366;margin-bottom:4px;">团队人均</div>'
     +'<div style="font-size:18px;font-weight:700;color:#0A84FF;">'+fmt(Math.round(mo.total/16))+'</div></div></div>';
 
-  document.getElementById('month-awards').innerHTML='<div class="sl">月度荣誉</div>'+mo.awards.map(awardRow).join('');
+  /* ── 月度荣誉 + 月度排行榜（对齐日 Tab 风格） ── */
+  var mRanked=mo.rows.slice().sort(function(a,b){return b.p-a.p;});
+  var awardsHtml='<div class="sl">月度荣誉</div>'+mo.awards.map(awardRow).join('');
+  awardsHtml+='<div class="sl" style="margin-top:14px;">月度排行</div>';
+  /* No.1 */
+  if(mRanked[0]){
+    var r1=mRanked[0],r1i=mo.rows.indexOf(mRanked[0]);
+    awardsHtml+='<div onclick="showHistMonthMember('+idx+','+r1i+')" style="cursor:pointer;background:#1C1C1E;border-radius:13px;padding:14px;display:flex;align-items:center;gap:12px;margin-bottom:8px;">'
+      +'<div style="font-size:28px;">🥇</div><div style="flex:1;">'
+      +'<div style="font-size:17px;font-weight:700;">'+r1.n+'</div>'
+      +'<div style="font-size:11px;color:#636366;margin-top:2px;">'+fmt(r1.monthly)+' kcal</div></div>'
+      +'<div>'+ring(r1.p,52)+'</div></div>';
+  }
+  /* No.2 & No.3 */
+  if(mRanked[1]||mRanked[2]){
+    awardsHtml+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">';
+    [1,2].forEach(function(rank){
+      if(mRanked[rank]){
+        var m=mRanked[rank],mi=mo.rows.indexOf(mRanked[rank]),medal=rank===1?'🥈':'🥉';
+        awardsHtml+='<div onclick="showHistMonthMember('+idx+','+mi+')" style="cursor:pointer;background:#1C1C1E;border-radius:11px;padding:12px;display:flex;align-items:center;gap:8px;">'
+          +'<span style="font-size:20px;">'+medal+'</span><div style="flex:1;min-width:0;">'
+          +'<div style="font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+m.n+'</div>'
+          +'<div style="font-size:10px;color:#636366;margin-top:2px;">'+fmt(m.monthly)+' kcal</div></div>'
+          +'<div>'+ring(m.p,40)+'</div></div>';
+      }
+    });
+    awardsHtml+='</div>';
+  }
+  /* No.4–6 */
+  if(mRanked.length>3){
+    awardsHtml+='<div style="font-size:11px;color:#636366;margin-bottom:6px;">第4–6位</div>';
+    awardsHtml+='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;">';
+    mRanked.slice(3,6).forEach(function(m){
+      var mi=mo.rows.indexOf(m);
+      awardsHtml+='<div onclick="showHistMonthMember('+idx+','+mi+')" style="cursor:pointer;background:#1C1C1E;border-radius:11px;padding:10px 8px;text-align:center;">'
+        +'<div style="font-size:12px;font-weight:600;margin-bottom:4px;">'+m.n+'</div>'
+        +'<div style="font-size:10px;color:#636366;margin-bottom:4px;">'+fmt(m.monthly)+'</div>'
+        +'<div>'+ring(m.p,38)+'</div></div>';
+    });
+    awardsHtml+='</div>';
+  }
+  document.getElementById('month-awards').innerHTML=awardsHtml;
 
-  var sorted=mo.rows.slice().sort(function(a,b){return b.p-a.p;});
+  var sorted=mRanked;
   document.getElementById('month-group').innerHTML=sorted.map(function(m){
     var origIdx=mo.rows.indexOf(m);
     return '<div class="mc" onclick="showHistMonthMember('+idx+','+origIdx+')"'
