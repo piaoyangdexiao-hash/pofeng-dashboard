@@ -668,6 +668,12 @@ var SPORT_COLORS = ['#0A84FF','#FF2D55','#30D158','#FF9F0A'];
   /* ── historyMonths ── */
   (PF.historyMonths||[]).forEach(function(mo){
     if(!mo.m) mo.m = mo.month||'';
+    /* shortM：从 m 或 month 中提取月份数字 */
+    if(!mo.shortM){
+      var src=mo.m||mo.month||'';
+      var pts=src.match(/\d+年(\d+)月/);
+      mo.shortM=pts?parseInt(pts[1])+'月':src;
+    }
   });
 
   /* ── historyWeeks ── */
@@ -1116,9 +1122,11 @@ function showHistWeekDetail(idx){
 function renderMonthPicker(){
   document.getElementById('month-selector').innerHTML=PF.historyMonths.map(function(mo,i){
     var a=i===currentMonthIdx;
+    /* shortM fallback：兼容Q未提供该字段的情况 */
+    var label=mo.shortM||(mo.m||'').replace(/\d+年/,'')||(mo.month||'').replace(/\d+年/,'')||mo.m||mo.month||'';
     return '<button class="hchip" onclick="selectMonth('+i+')" id="mchip-'+i
       +'" style="background:'+(a?'#FF9F0A':'#1C1C1E')+';color:'+(a?'#000':'#8E8E93')
-      +';font-weight:'+(a?700:400)+';">'+mo.shortM+'</button>';
+      +';font-weight:'+(a?700:400)+';">'+label+'</button>';
   }).join('');
 }
 function selectMonth(idx){currentMonthIdx=idx;renderMonthPicker();renderMonthContent(idx);}
