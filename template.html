@@ -643,6 +643,7 @@ var SPORT_COLORS = ['#0A84FF','#FF2D55','#30D158','#FF9F0A'];
 
   /* ── historyDays ── */
   (PF.historyDays||[]).forEach(function(d){
+    if(!d.dt && d.date)    d.dt      = d.date;           /* Q 用 date 字段，补齐 dt */
     if(!d.d)               d.d       = d.label||'';
     if(!d.dw && d.date)   {var dt=new Date(d.date); d.dw=DOW[dt.getDay()];}
     if(d.checked===undefined) d.checked = d.checkInCount!==undefined ? d.checkInCount : (d.count||0);
