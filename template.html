@@ -637,6 +637,49 @@ var PF = {
 <script>
 var SPORT_LABELS = ['跑步','力量训练','瑜伽/拉伸','骑行'];
 var SPORT_COLORS = ['#0A84FF','#FF2D55','#30D158','#FF9F0A'];
+
+/* ════════════════════════════════════════
+   PF 兼容层：将 Q 的字段名映射到模板期望的字段名
+   Q 更新字段名后此层可逐步移除
+════════════════════════════════════════ */
+(function normalizePF(){
+  var DOW=['周日','周一','周二','周三','周四','周五','周六'];
+
+  /* ── historyDays ── */
+  (PF.historyDays||[]).forEach(function(d){
+    if(!d.d)               d.d       = d.label||'';
+    if(!d.dw && d.date)   {var dt=new Date(d.date); d.dw=DOW[dt.getDay()];}
+    if(d.checked===undefined) d.checked = d.checkInCount!==undefined ? d.checkInCount : (d.count||0);
+    if(d.avg===undefined)     d.avg     = d.avgKcal||0;
+    /* 合并 ranked + unchecked → rows */
+    if(!d.rows){
+      var rows=[];
+      (d.ranked||[]).forEach(function(r){
+        rows.push({n:r.n||r.name||'', k:r.k!==undefined?r.k:(r.today||0),
+                   sp:r.sp||r.sport||'', p:r.p||0, idx:r.idx!==undefined?r.idx:-1});
+      });
+      (d.unchecked||[]).forEach(function(u){
+        rows.push({n:typeof u==='string'?u:(u.n||u.name||''), k:0, sp:'', p:0, idx:-1});
+      });
+      d.rows=rows;
+    }
+  });
+
+  /* ── historyMonths ── */
+  (PF.historyMonths||[]).forEach(function(mo){
+    if(!mo.m) mo.m = mo.month||'';
+  });
+
+  /* ── historyWeeks ── */
+  (PF.historyWeeks||[]).forEach(function(wk){
+    if(!wk.w)          wk.w          = wk.weekLabel||wk.label||'';
+    if(wk.hero){
+      if(wk.hero.wd===undefined) wk.hero.wd = wk.hero.days||0;
+      if(wk.hero.k===undefined)  wk.hero.k  = wk.hero.weekKcal||0;
+    }
+    if(!wk.rows) wk.rows = wk.members||[];
+  });
+})();
 /* ── 世界名言语录库（按日期哈希每天固定一条） ── */
 var QUOTES=[
   /* === 教父 The Godfather === */
