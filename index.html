@@ -3388,7 +3388,7 @@ function Q_renderRulesTargets(){
 ══════════════════════════════════════ */
 function Q_showDayMember(i){
   var M = Q_PF.members;
-  var m = M[i];
+  var m = M.find(function(x){ return x.idx === i; });
   if(!m) return;
   var col = Q_gc(m.p);
   Q_openDetail('day');
@@ -3433,7 +3433,7 @@ function Q_showDayMember(i){
 ══════════════════════════════════════ */
 function Q_showMonthMember(i){
   var M = Q_PF.members;
-  var m = M[i];
+  var m = M.find(function(x){ return x.idx === i; });
   if(!m) return;
   var col = Q_gc(m.p);
   Q_openDetail('month');
