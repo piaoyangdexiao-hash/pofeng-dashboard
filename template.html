@@ -1315,7 +1315,8 @@ function showMCPopup(dt,k,sp){
 
 /* ── M5: 团队月历热图 ── */
 function _teamCalHtml(mo){
-  var tc=PF.teamCalendar||[];
+  /* 优先读当月的 mo.teamCalendar，回退到顶级 PF.teamCalendar（stub 兼容） */
+  var tc=(mo&&mo.teamCalendar)||PF.teamCalendar||[];
   var pts=mo.m.match(/(\d+)年(\d+)月/);
   if(!pts)return '';
   var yr=parseInt(pts[1]),mon=parseInt(pts[2]);
