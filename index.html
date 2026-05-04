@@ -4123,14 +4123,14 @@ var PF = {
           "wk": 959,
           "wd": 2,
           "lw": 1629,
-          "sp": "跑步"
+          "sp": "骑行"
         },
         {
           "n": "雷加",
           "wk": 921,
           "wd": 3,
           "lw": 2380,
-          "sp": "篮球"
+          "sp": "骑行"
         },
         {
           "n": "Tarry",
@@ -4227,7 +4227,7 @@ var PF = {
           "wk": 3430,
           "wd": 4,
           "lw": 2559,
-          "sp": "室内骑行"
+          "sp": "力量训练"
         },
         {
           "n": "Tarry",
@@ -4283,7 +4283,7 @@ var PF = {
           "wk": 1470,
           "wd": 3,
           "lw": 1760,
-          "sp": "其他"
+          "sp": "力量训练"
         },
         {
           "n": "陈雷",
@@ -4387,7 +4387,7 @@ var PF = {
           "wk": 2559,
           "wd": 3,
           "lw": 2050,
-          "sp": "室内骑行"
+          "sp": "篮球"
         },
         {
           "n": "之奥",
@@ -4401,7 +4401,7 @@ var PF = {
           "wk": 2252,
           "wd": 5,
           "lw": 531,
-          "sp": "HIIT"
+          "sp": "力量训练"
         },
         {
           "n": "梓杉",
@@ -4436,7 +4436,7 @@ var PF = {
           "wk": 1760,
           "wd": 4,
           "lw": 2288,
-          "sp": "综合训练"
+          "sp": "篮球"
         },
         {
           "n": "镕清",
@@ -4540,7 +4540,7 @@ var PF = {
           "wk": 2050,
           "wd": 2,
           "lw": 809,
-          "sp": "篮球"
+          "sp": "羽毛球"
         },
         {
           "n": "福远",
@@ -4679,7 +4679,7 @@ var PF = {
           "wk": 1954,
           "wd": 3,
           "lw": 0,
-          "sp": "HIIT"
+          "sp": "骑行"
         },
         {
           "n": "晓识",
@@ -4721,7 +4721,7 @@ var PF = {
           "wk": 1080,
           "wd": 2,
           "lw": 0,
-          "sp": "跑步"
+          "sp": "骑行"
         },
         {
           "n": "福远",
@@ -4735,21 +4735,21 @@ var PF = {
           "wk": 841,
           "wd": 5,
           "lw": 0,
-          "sp": "HIIT"
+          "sp": "综合训练"
         },
         {
           "n": "杰诚",
           "wk": 809,
           "wd": 2,
           "lw": 0,
-          "sp": "椭圆机"
+          "sp": "力量训练"
         },
         {
           "n": "婉思",
           "wk": 786,
           "wd": 4,
           "lw": 0,
-          "sp": "其他"
+          "sp": "综合训练"
         },
         {
           "n": "伊竹",
@@ -7256,8 +7256,8 @@ function renderWeekTab(){
 
   /* 历史周报：时间倒序（最新周在前） */
   var hwLen=PF.historyWeeks.length;
-  document.getElementById('week-history-list').innerHTML=PF.historyWeeks.slice().map(function(wk,ri){
-    var i=ri; /* 原始索引，用于详情页跳转 */
+  document.getElementById('week-history-list').innerHTML=PF.historyWeeks.slice().reverse().map(function(wk,ri){
+    var i=hwLen-1-ri; /* 原始索引，用于详情页跳转 */
     return '<div class="mc aw" onclick="showHistWeekDetail('+i+')">'
       +'<div style="flex:1;"><div style="font-size:12px;font-weight:600;">'+wk.w+'</div>'
       +'<div style="font-size:10px;color:#636366;margin-top:2px;">团队 '+fmt(wk.total)+' kcal · 领风: '+wk.hero.name+' '+fmt(wk.hero.k)+'</div></div>'
@@ -7439,8 +7439,10 @@ function _memberCalHtml(memberName, singleMonth){
   if(singleMonth){
     months.push(singleMonth);
   } else {
-    if(PF.historyMonths&&PF.historyMonths.length>0) months.push(PF.historyMonths[0].m);
+    /* 固定显示：上月 + 本月（不依赖 historyMonths，避免两个 tab 都显示本月） */
     var td=new Date();
+    var pm=new Date(td.getFullYear(),td.getMonth()-1,1);
+    months.push(pm.getFullYear()+'年'+(pm.getMonth()+1)+'月');
     months.push(td.getFullYear()+'年'+(td.getMonth()+1)+'月');
   }
   var defIdx=months.length-1;
