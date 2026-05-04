@@ -982,7 +982,7 @@ function renderDayContent(idx){
   } else {lbl.style.display='none';r4.innerHTML='';}
 
   if(unchecked.length>0){
-    var q=getDailyQuote(d.dt||d.date);
+    var q=getDailyQuote(d.dt||d.date||String(20260000+idx*7));
     document.getElementById('day-unchecked-card').innerHTML=
       '<div style="background:#1C1C1E;border-radius:13px;padding:14px;">'
       +'<div class="sl">今日未打卡 · '+unchecked.length+'人</div>'
@@ -1207,8 +1207,8 @@ function renderMonthContent(idx){
   /* ── M5: 团队打卡日历（在破风基金之上） ── */
   document.getElementById('month-team-calendar').innerHTML=_teamCalHtml(mo);
 
-  var f=mo.fund;
-  document.getElementById('month-fund').innerHTML=
+  var f=mo.fund||{};
+  document.getElementById('month-fund').innerHTML=(f.达标===undefined)?'':
     '<div style="background:#1C1C1E;border-radius:13px;padding:14px;border:0.5px solid #FF9F0A30;">'
     +'<div class="sl">破风基金</div>'
     +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">'
