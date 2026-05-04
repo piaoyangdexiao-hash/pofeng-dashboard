@@ -1061,8 +1061,8 @@ function renderWeekTab(){
 
   /* 历史周报：时间倒序（最新周在前） */
   var hwLen=PF.historyWeeks.length;
-  document.getElementById('week-history-list').innerHTML=PF.historyWeeks.slice().reverse().map(function(wk,ri){
-    var i=hwLen-1-ri; /* 原始索引，用于详情页跳转 */
+  document.getElementById('week-history-list').innerHTML=PF.historyWeeks.slice().map(function(wk,ri){
+    var i=ri; /* 原始索引，用于详情页跳转 */
     return '<div class="mc aw" onclick="showHistWeekDetail('+i+')">'
       +'<div style="flex:1;"><div style="font-size:12px;font-weight:600;">'+wk.w+'</div>'
       +'<div style="font-size:10px;color:#636366;margin-top:2px;">团队 '+fmt(wk.total)+' kcal · 领风: '+wk.hero.name+' '+fmt(wk.hero.k)+'</div></div>'
