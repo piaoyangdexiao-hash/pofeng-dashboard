@@ -11290,6 +11290,16 @@ function renderRulesTargets(){
 ════════════════════════════════════════ */
 renderDayTab();
 renderRulesTargets();
+
+// URL hash 路由：#week / #month / #rules 直接跳对应 tab
+(function(){
+  function applyHash(){
+    var h=window.location.hash.replace('#','');
+    if(['week','month','rules'].indexOf(h)>-1) showView(h);
+  }
+  applyHash();
+  window.addEventListener('hashchange',applyHash);
+})();
 </script>
 </body>
 </html>
