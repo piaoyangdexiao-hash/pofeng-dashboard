@@ -95,10 +95,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Ne
   <div style="background:#1C1C1E;border-radius:13px;padding:14px;margin-bottom:10px;">
     <div style="font-size:10px;color:#30D158;font-weight:700;letter-spacing:1px;margin-bottom:12px;text-transform:uppercase;">月度基础目标</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
-      <div style="background:#2C2C2E;border-radius:11px;padding:14px;text-align:center;border:0.5px solid #0A84FF25;"><div style="font-size:11px;color:#636366;margin-bottom:5px;">男性基础目标</div><div style="font-size:28px;font-weight:800;color:#0A84FF;">7,000</div><div style="font-size:11px;color:#48484A;margin-top:3px;">kcal / 月</div></div>
-      <div style="background:#2C2C2E;border-radius:11px;padding:14px;text-align:center;border:0.5px solid #FF2D5525;"><div style="font-size:11px;color:#636366;margin-bottom:5px;">女性基础目标</div><div style="font-size:28px;font-weight:800;color:#FF2D55;">4,800</div><div style="font-size:11px;color:#48484A;margin-top:3px;">kcal / 月</div></div>
+      <div style="background:#2C2C2E;border-radius:11px;padding:14px;text-align:center;border:0.5px solid #0A84FF25;"><div style="font-size:11px;color:#636366;margin-bottom:5px;">男性基础目标</div><div id="r-base-male" style="font-size:28px;font-weight:800;color:#0A84FF;">—</div><div style="font-size:11px;color:#48484A;margin-top:3px;">kcal / 月</div></div>
+      <div style="background:#2C2C2E;border-radius:11px;padding:14px;text-align:center;border:0.5px solid #FF2D5525;"><div style="font-size:11px;color:#636366;margin-bottom:5px;">女性基础目标</div><div id="r-base-female" style="font-size:28px;font-weight:800;color:#FF2D55;">—</div><div style="font-size:11px;color:#48484A;margin-top:3px;">kcal / 月</div></div>
     </div>
-    <div style="font-size:12px;color:#636366;line-height:1.65;">病假豁免公式：基础目标 × (自然周数 − 病假周数) ÷ 自然周数</div>
+    <div style="font-size:12px;color:#636366;line-height:1.65;">病假豁免公式：基础目标 × (当月自然日数 − 请假天数) ÷ 当月自然日数</div>
   </div>
   <div style="background:#1C1C1E;border-radius:13px;padding:14px;margin-bottom:10px;">
     <div id="r-targets-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
@@ -205,6 +205,8 @@ var PF = {
       "cur": true
     }
   ],
+  "baseMale": 8000,
+  "baseFemale": 5400,
   "fund": {
     "达标": 11,
     "未达标": 5,
@@ -11269,6 +11271,8 @@ function backFromDetail(){
 ════════════════════════════════════════ */
 function renderRulesTargets(){
   document.getElementById('r-targets-month').textContent=PF.month;
+  if(PF.baseMale)document.getElementById('r-base-male').textContent=PF.baseMale.toLocaleString();
+  if(PF.baseFemale)document.getElementById('r-base-female').textContent=PF.baseFemale.toLocaleString();
   document.getElementById('r-countdown').innerHTML=
     '<div style="font-size:10px;color:#636366;margin-bottom:3px;">距目标</div>'
     +'<div style="font-size:15px;font-weight:700;color:#FF9F0A;">'+PF.daysLeft+'天</div>';
