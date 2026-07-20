@@ -4235,14 +4235,14 @@ var PF = {
           "wk": 1334,
           "wd": 4,
           "lw": 0,
-          "sp": "骑行"
+          "sp": "跑步"
         },
         {
           "n": "杰诚",
           "wk": 1300,
           "wd": 2,
           "lw": 294,
-          "sp": "室内骑行"
+          "sp": "力量训练"
         },
         {
           "n": "晓识",
@@ -4263,7 +4263,7 @@ var PF = {
           "wk": 1230,
           "wd": 3,
           "lw": 1731,
-          "sp": "步行"
+          "sp": "跑步"
         },
         {
           "n": "加宝",
@@ -4291,7 +4291,7 @@ var PF = {
           "wk": 617,
           "wd": 2,
           "lw": 1425,
-          "sp": "步行"
+          "sp": "跑步"
         },
         {
           "n": "重楼",
@@ -4362,7 +4362,7 @@ var PF = {
           "wk": 3447,
           "wd": 4,
           "lw": 0,
-          "sp": "室内骑行"
+          "sp": "骑行"
         },
         {
           "n": "加宝",
@@ -4383,7 +4383,7 @@ var PF = {
           "wk": 2467,
           "wd": 4,
           "lw": 612,
-          "sp": "室内跑步"
+          "sp": "骑行"
         },
         {
           "n": "之奥",
@@ -4550,7 +4550,7 @@ var PF = {
           "wk": 1578,
           "wd": 2,
           "lw": 1822,
-          "sp": "步行"
+          "sp": "徒步"
         },
         {
           "n": "雷加",
@@ -4696,14 +4696,14 @@ var PF = {
           "wk": 1822,
           "wd": 4,
           "lw": 2207,
-          "sp": "步行"
+          "sp": "跑步"
         },
         {
           "n": "小涳",
           "wk": 1816,
           "wd": 2,
           "lw": 1766,
-          "sp": "步行"
+          "sp": "篮球"
         },
         {
           "n": "重楼",
@@ -4816,7 +4816,7 @@ var PF = {
           "wk": 2490,
           "wd": 4,
           "lw": 920,
-          "sp": "跑步"
+          "sp": "骑行"
         },
         {
           "n": "重楼",
@@ -4837,7 +4837,7 @@ var PF = {
           "wk": 2199,
           "wd": 3,
           "lw": 1116,
-          "sp": "室内骑行"
+          "sp": "跑步"
         },
         {
           "n": "梓杉",
@@ -4879,7 +4879,7 @@ var PF = {
           "wk": 1576,
           "wd": 4,
           "lw": 2536,
-          "sp": "羽毛球"
+          "sp": "步行"
         },
         {
           "n": "陈雷",
@@ -5032,7 +5032,7 @@ var PF = {
           "wk": 925,
           "wd": 3,
           "lw": 1777,
-          "sp": "步行"
+          "sp": "跑步"
         },
         {
           "n": "Tarry",
@@ -5046,7 +5046,7 @@ var PF = {
           "wk": 654,
           "wd": 2,
           "lw": 2280,
-          "sp": "步行"
+          "sp": "骑行"
         },
         {
           "n": "伊竹",
@@ -5084,7 +5084,7 @@ var PF = {
         "name": "之奥",
         "k": 4804,
         "wd": 5,
-        "sport": "步行",
+        "sport": "篮球",
         "monthP": 84
       },
       "awards": [],
@@ -5094,7 +5094,7 @@ var PF = {
           "wk": 4804,
           "wd": 5,
           "lw": 1980,
-          "sp": "步行"
+          "sp": "篮球"
         },
         {
           "n": "洵心",
@@ -5157,7 +5157,7 @@ var PF = {
           "wk": 2076,
           "wd": 2,
           "lw": 1955,
-          "sp": "室内骑行"
+          "sp": "篮球"
         },
         {
           "n": "加宝",
@@ -5275,7 +5275,7 @@ var PF = {
           "wk": 1955,
           "wd": 3,
           "lw": 625,
-          "sp": "力量训练"
+          "sp": "划船机"
         },
         {
           "n": "雷加",
@@ -12017,12 +12017,24 @@ function renderDayContent(idx){
 function renderDayTab(){
   renderDayPicker();
   renderDayContent(0);
-  document.getElementById('day-monthly-grid').innerHTML=PF.members.map(function(m,i){
+  /* 本月实时进度：病假豁免成员（targetNote 非空）不参与排名，单独展示 */
+  var _mgAll=PF.members.map(function(m,i){return {m:m,i:i};});
+  var _mgRanked=_mgAll.filter(function(x){return !x.m.targetNote;});
+  var _mgExempt=_mgAll.filter(function(x){return x.m.targetNote;});
+  function _mgCard(x){
+    var m=x.m,i=x.i;
     return '<div class="mc" onclick="showDayMember('+i+')" style="background:#1C1C1E;border-radius:11px;padding:10px 8px;text-align:center;">'
       +'<div style="font-size:12px;font-weight:600;margin-bottom:4px;">'+m.n+'</div>'
       +'<div>'+ring(m.p,44)+'</div>'
       +'<div style="font-size:9px;color:#636366;margin-top:4px;">'+fmt(m.monthly)+'</div></div>';
-  }).join('');
+  }
+  var _mgHtml=_mgRanked.map(_mgCard).join('');
+  if(_mgExempt.length){
+    _mgHtml+='<div style="grid-column:1/-1;margin-top:2px;padding:8px;border:1px dashed #3A3A3C;border-radius:11px;">'
+      +'<div style="font-size:9px;color:#8E8E93;margin-bottom:6px;">🛡️ 病假豁免 · 不参与排名</div>'
+      +'<div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;opacity:.8;">'+_mgExempt.map(_mgCard).join('')+'</div></div>';
+  }
+  document.getElementById('day-monthly-grid').innerHTML=_mgHtml;
 }
 
 /* ════════════════════════════════════════
@@ -12162,11 +12174,13 @@ function renderMonthContent(idx){
     +'<div style="font-size:18px;font-weight:700;color:#0A84FF;">'+fmt(Math.round(mo.total/16))+'</div></div></div>';
 
   /* ── 月度荣誉（仅 awards，不含排行） ── */
-  var mRanked=mo.rows.slice().sort(function(a,b){return b.p-a.p;});
+  /* 病假豁免成员（targetNote 非空）不参与总排名，单独展示 */
+  var mExempt=mo.rows.filter(function(r){return r.targetNote;});
+  var mRanked=mo.rows.filter(function(r){return !r.targetNote;}).sort(function(a,b){return b.p-a.p;});
   document.getElementById('month-awards').innerHTML=
     '<div class="sl">月度荣誉</div>'+(mo.awards&&mo.awards.length?mo.awards.map(awardRow).join(''):'<div style="font-size:12px;color:#636366;">暂无荣誉记录</div>');
 
-  /* ── 全员月度群像（日Tab大中小卡样式，按 p% 排序） ── */
+  /* ── 全员月度群像（日Tab大中小卡样式，按 p% 排序；豁免成员不参与排名） ── */
   var grpHtml='';
   /* No.1 大卡 */
   if(mRanked[0]){
@@ -12175,7 +12189,7 @@ function renderMonthContent(idx){
     grpHtml+='<div onclick="showHistMonthMember('+idx+','+r1i+')" style="cursor:pointer;background:#1C1C1E;border-radius:13px;padding:14px;display:flex;align-items:center;gap:12px;margin-bottom:8px;">'
       +'<div style="font-size:28px;">🥇</div><div style="flex:1;">'
       +'<div style="font-size:17px;font-weight:700;">'+r1.n+'</div>'
-      +'<div style="font-size:11px;color:#636366;margin-top:2px;">'+fmt(r1.monthly)+' kcal'+(r1.targetNote?' · <span style="color:#FF9F0A;">'+r1.targetNote+'</span>':'')+'</div></div>'
+      +'<div style="font-size:11px;color:#636366;margin-top:2px;">'+fmt(r1.monthly)+' kcal</div></div>'
       +'<div>'+ring(r1.p,52)+'</div></div>';
   }
   /* No.2 & 3 中卡 */
@@ -12188,7 +12202,6 @@ function renderMonthContent(idx){
           +'<span style="font-size:20px;">'+medal+'</span><div style="flex:1;min-width:0;">'
           +'<div style="font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+m.n+'</div>'
           +'<div style="font-size:10px;color:#636366;margin-top:2px;">'+fmt(m.monthly)+' kcal</div>'
-          +(m.targetNote?'<div style="font-size:9px;color:#FF9F0A;margin-top:1px;">'+m.targetNote+'</div>':'')
           +'</div><div>'+ring(m.p,40)+'</div></div>';
       }
     });
@@ -12203,10 +12216,25 @@ function renderMonthContent(idx){
         +'<div style="font-size:12px;font-weight:600;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+m.n+'</div>'
         +'<div style="font-size:9px;color:#636366;margin-bottom:5px;">'+fmt(m.monthly)+'</div>'
         +'<div style="display:flex;justify-content:center;">'+ring(m.p,36)+'</div>'
-        +(m.targetNote?'<div style="font-size:8px;color:#FF9F0A;margin-top:3px;">'+m.targetNote+'</div>':'')
         +'</div>';
     });
     grpHtml+='</div>';
+  }
+  /* 病假豁免成员：不参与排名，虚线框单独展示 */
+  if(mExempt.length){
+    grpHtml+='<div style="margin-top:8px;padding:10px;border:1px dashed #3A3A3C;border-radius:11px;">'
+      +'<div style="font-size:9px;color:#8E8E93;margin-bottom:6px;">🛡️ 病假豁免 · 不参与排名</div>'
+      +'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;opacity:.8;">';
+    mExempt.forEach(function(m){
+      var mi=mo.rows.indexOf(m);
+      grpHtml+='<div onclick="showHistMonthMember('+idx+','+mi+')" style="cursor:pointer;background:#1C1C1E;border-radius:11px;padding:10px 6px;text-align:center;">'
+        +'<div style="font-size:12px;font-weight:600;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+m.n+'</div>'
+        +'<div style="font-size:9px;color:#636366;margin-bottom:5px;">'+fmt(m.monthly)+'</div>'
+        +'<div style="display:flex;justify-content:center;">'+ring(m.p,36)+'</div>'
+        +'<div style="font-size:8px;color:#FF9F0A;margin-top:3px;">'+m.targetNote+'</div>'
+        +'</div>';
+    });
+    grpHtml+='</div></div>';
   }
   document.getElementById('month-group').innerHTML=grpHtml;
 
