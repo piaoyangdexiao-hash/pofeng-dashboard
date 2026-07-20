@@ -1011,12 +1011,24 @@ function renderDayContent(idx){
 function renderDayTab(){
   renderDayPicker();
   renderDayContent(0);
-  document.getElementById('day-monthly-grid').innerHTML=PF.members.map(function(m,i){
+  /* 本月实时进度：病假豁免成员（targetNote 非空）不参与排名，单独展示 */
+  var _mgAll=PF.members.map(function(m,i){return {m:m,i:i};});
+  var _mgRanked=_mgAll.filter(function(x){return !x.m.targetNote;});
+  var _mgExempt=_mgAll.filter(function(x){return x.m.targetNote;});
+  function _mgCard(x){
+    var m=x.m,i=x.i;
     return '<div class="mc" onclick="showDayMember('+i+')" style="background:#1C1C1E;border-radius:11px;padding:10px 8px;text-align:center;">'
       +'<div style="font-size:12px;font-weight:600;margin-bottom:4px;">'+m.n+'</div>'
       +'<div>'+ring(m.p,44)+'</div>'
       +'<div style="font-size:9px;color:#636366;margin-top:4px;">'+fmt(m.monthly)+'</div></div>';
-  }).join('');
+  }
+  var _mgHtml=_mgRanked.map(_mgCard).join('');
+  if(_mgExempt.length){
+    _mgHtml+='<div style="grid-column:1/-1;margin-top:2px;padding:8px;border:1px dashed #3A3A3C;border-radius:11px;">'
+      +'<div style="font-size:9px;color:#8E8E93;margin-bottom:6px;">🛡️ 病假豁免 · 不参与排名</div>'
+      +'<div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;opacity:.8;">'+_mgExempt.map(_mgCard).join('')+'</div></div>';
+  }
+  document.getElementById('day-monthly-grid').innerHTML=_mgHtml;
 }
 
 /* ════════════════════════════════════════
@@ -1156,11 +1168,13 @@ function renderMonthContent(idx){
     +'<div style="font-size:18px;font-weight:700;color:#0A84FF;">'+fmt(Math.round(mo.total/16))+'</div></div></div>';
 
   /* ── 月度荣誉（仅 awards，不含排行） ── */
-  var mRanked=mo.rows.slice().sort(function(a,b){return b.p-a.p;});
+  /* 病假豁免成员（targetNote 非空）不参与总排名，单独展示 */
+  var mExempt=mo.rows.filter(function(r){return r.targetNote;});
+  var mRanked=mo.rows.filter(function(r){return !r.targetNote;}).sort(function(a,b){return b.p-a.p;});
   document.getElementById('month-awards').innerHTML=
     '<div class="sl">月度荣誉</div>'+(mo.awards&&mo.awards.length?mo.awards.map(awardRow).join(''):'<div style="font-size:12px;color:#636366;">暂无荣誉记录</div>');
 
-  /* ── 全员月度群像（日Tab大中小卡样式，按 p% 排序） ── */
+  /* ── 全员月度群像（日Tab大中小卡样式，按 p% 排序；豁免成员不参与排名） ── */
   var grpHtml='';
   /* No.1 大卡 */
   if(mRanked[0]){
@@ -1169,7 +1183,7 @@ function renderMonthContent(idx){
     grpHtml+='<div onclick="showHistMonthMember('+idx+','+r1i+')" style="cursor:pointer;background:#1C1C1E;border-radius:13px;padding:14px;display:flex;align-items:center;gap:12px;margin-bottom:8px;">'
       +'<div style="font-size:28px;">🥇</div><div style="flex:1;">'
       +'<div style="font-size:17px;font-weight:700;">'+r1.n+'</div>'
-      +'<div style="font-size:11px;color:#636366;margin-top:2px;">'+fmt(r1.monthly)+' kcal'+(r1.targetNote?' · <span style="color:#FF9F0A;">'+r1.targetNote+'</span>':'')+'</div></div>'
+      +'<div style="font-size:11px;color:#636366;margin-top:2px;">'+fmt(r1.monthly)+' kcal</div></div>'
       +'<div>'+ring(r1.p,52)+'</div></div>';
   }
   /* No.2 & 3 中卡 */
@@ -1182,7 +1196,6 @@ function renderMonthContent(idx){
           +'<span style="font-size:20px;">'+medal+'</span><div style="flex:1;min-width:0;">'
           +'<div style="font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+m.n+'</div>'
           +'<div style="font-size:10px;color:#636366;margin-top:2px;">'+fmt(m.monthly)+' kcal</div>'
-          +(m.targetNote?'<div style="font-size:9px;color:#FF9F0A;margin-top:1px;">'+m.targetNote+'</div>':'')
           +'</div><div>'+ring(m.p,40)+'</div></div>';
       }
     });
@@ -1197,10 +1210,25 @@ function renderMonthContent(idx){
         +'<div style="font-size:12px;font-weight:600;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+m.n+'</div>'
         +'<div style="font-size:9px;color:#636366;margin-bottom:5px;">'+fmt(m.monthly)+'</div>'
         +'<div style="display:flex;justify-content:center;">'+ring(m.p,36)+'</div>'
-        +(m.targetNote?'<div style="font-size:8px;color:#FF9F0A;margin-top:3px;">'+m.targetNote+'</div>':'')
         +'</div>';
     });
     grpHtml+='</div>';
+  }
+  /* 病假豁免成员：不参与排名，虚线框单独展示 */
+  if(mExempt.length){
+    grpHtml+='<div style="margin-top:8px;padding:10px;border:1px dashed #3A3A3C;border-radius:11px;">'
+      +'<div style="font-size:9px;color:#8E8E93;margin-bottom:6px;">🛡️ 病假豁免 · 不参与排名</div>'
+      +'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;opacity:.8;">';
+    mExempt.forEach(function(m){
+      var mi=mo.rows.indexOf(m);
+      grpHtml+='<div onclick="showHistMonthMember('+idx+','+mi+')" style="cursor:pointer;background:#1C1C1E;border-radius:11px;padding:10px 6px;text-align:center;">'
+        +'<div style="font-size:12px;font-weight:600;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+m.n+'</div>'
+        +'<div style="font-size:9px;color:#636366;margin-bottom:5px;">'+fmt(m.monthly)+'</div>'
+        +'<div style="display:flex;justify-content:center;">'+ring(m.p,36)+'</div>'
+        +'<div style="font-size:8px;color:#FF9F0A;margin-top:3px;">'+m.targetNote+'</div>'
+        +'</div>';
+    });
+    grpHtml+='</div></div>';
   }
   document.getElementById('month-group').innerHTML=grpHtml;
 
