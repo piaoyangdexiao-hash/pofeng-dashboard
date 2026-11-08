@@ -87,7 +87,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Ne
     <div style="font-size:10px;color:#FF2D55;font-weight:700;letter-spacing:1px;margin-bottom:10px;text-transform:uppercase;">项目简介</div>
     <div style="font-size:13px;color:#d4d4d4;line-height:1.75;">破风前行是以2027年3月体测为目标的团队健身计划，通过钉钉表格记录打卡、AI每日自动生成报告。每月达标保本金，未达标500元入池。</div>
     <div style="display:flex;gap:8px;margin-top:12px;">
-      <div style="background:#2C2C2E;border-radius:9px;padding:9px 12px;flex:1;text-align:center;"><div style="font-size:10px;color:#636366;margin-bottom:3px;">团队人数</div><div style="font-size:15px;font-weight:700;color:#0A84FF;">16人</div></div>
+      <div style="background:#2C2C2E;border-radius:9px;padding:9px 12px;flex:1;text-align:center;"><div style="font-size:10px;color:#636366;margin-bottom:3px;">团队人数</div><div id="r-teamsize" style="font-size:15px;font-weight:700;color:#0A84FF;">—</div></div>
       <div style="background:#2C2C2E;border-radius:9px;padding:9px 12px;flex:1;text-align:center;"><div style="font-size:10px;color:#636366;margin-bottom:3px;">目标日期</div><div style="font-size:15px;font-weight:700;color:#FF9F0A;">2027.03</div></div>
       <div id="r-countdown" style="background:#2C2C2E;border-radius:9px;padding:9px 12px;flex:1;text-align:center;"></div>
     </div>
@@ -1504,6 +1504,8 @@ function renderRulesTargets(){
   document.getElementById('r-countdown').innerHTML=
     '<div style="font-size:10px;color:#636366;margin-bottom:3px;">距目标</div>'
     +'<div style="font-size:15px;font-weight:700;color:#FF9F0A;">'+PF.daysLeft+'天</div>';
+  var ts=document.getElementById('r-teamsize');
+  if(ts) ts.textContent=(PF.members?PF.members.length:0)+'人';
   var notes=PF.members.filter(function(m){return m.targetNote;}).map(function(m){return m.n+'：'+m.targetNote;});
   document.getElementById('r-targets-note').textContent=notes.length?'调整说明：'+notes.join('；'):'';
   document.getElementById('r-targets').innerHTML=PF.members.map(function(m){
